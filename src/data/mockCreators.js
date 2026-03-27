@@ -494,9 +494,10 @@ const socialUrls = {
   c30: { igUrl: 'https://instagram.com/sageskin', tiktokUrl: null },
 };
 
-MOCK_CREATORS.forEach(c => {
+MOCK_CREATORS.forEach((c, i) => {
   const urls = socialUrls[c.id] || {};
   c.igUrl = urls.igUrl || null;
   c.tiktokUrl = urls.tiktokUrl || null;
   c.posts = generatePosts(c.id, c.niche, c.platform);
+  c.benableId = 'BEN-' + String(1000 + i).padStart(4, '0');
 });

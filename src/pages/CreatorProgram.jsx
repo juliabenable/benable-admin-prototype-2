@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Upload, Check, Send } from 'lucide-react';
+import { Upload, Check, Send, Plus, X, Search } from 'lucide-react';
 import { useAppState } from '../hooks/useAppState';
 import Avatar from '../components/Avatar';
 import { formatFollowers } from '../utils/formatters';
@@ -11,6 +11,10 @@ const PROGRAM_STAGES = [
 ];
 
 const STAGE_LABELS = Object.fromEntries(PROGRAM_STAGES.map(s => [s.key, s]));
+
+function generateBenableId() {
+  return 'BEN-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 
 function parseCSV(text) {
   const lines = text.trim().split('\n');
@@ -28,10 +32,11 @@ function parseCSV(text) {
     const email = row.email || '';
     const city = row.city || row.location || '';
     const platform = row.platform || 'ig';
+    const benableId = row.benable_id || row['benable id'] || generateBenableId();
 
     const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
-    return { name, handle: handle.startsWith('@') ? handle : `@${handle}`, followers, niche, email, city, platform, initials };
+    return { name, handle: handle.startsWith('@') ? handle : `@${handle}`, followers, niche, email, city, platform, initials, benableId };
   });
 }
 
@@ -40,12 +45,42 @@ export default function CreatorProgram() {
   const fileRef = useRef(null);
   const [selected, setSelected] = useState(new Set());
   const [assignCampaign, setAssignCampaign] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({ name: '', benableId: '' });
   const liveCampaigns = campaigns.filter(c => c.status === 'live');
 
-  // Only show creators in program-level stages (not assigned to any campaign yet, or in program stages)
+  // Only show creators in program-level stages
   const programCreators = useMemo(() => {
-    return creators.filter(c => ['not_in_program', 'invited_to_program', 'in_program'].includes(c.stage));
-  }, [creators]);
+    let list = creators.filter(c => ['not_in_program', 'invited_to_program', 'in_program'].includes(c.stage));
+
+    // Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.handle.toLowerCase().includes(q) ||
+        (c.benableId && c.benableId.toLowerCase().includes(q))
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      list = list.filter(c => c.stage === statusFilter);
+    }
+
+    // Sort
+    if (sortBy === 'az') {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'za') {
+      list = [...list].sort((a, b) => b.name.localeCompare(a.name));
+    }
+    // 'newest' = default order (most recently added first, which is already the array order)
+
+    return list;
+  }, [creators, searchQuery, statusFilter, sortBy]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -81,6 +116,42 @@ export default function CreatorProgram() {
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  const handleAddCreator = () => {
+    if (!addForm.name.trim()) return;
+    const initials = addForm.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const newCreator = {
+      id: `c_add_${Date.now()}`,
+      name: addForm.name.trim(),
+      handle: '',
+      benableId: addForm.benableId.trim() || generateBenableId(),
+      followers: 0,
+      niche: '',
+      email: '',
+      city: '',
+      platform: 'ig',
+      initials,
+      campaignId: null,
+      stage: 'not_in_program',
+      daysInStage: 0,
+      isOverdue: false,
+      notes: [],
+      emails: [],
+      posts: [],
+      campaignsCompleted: 0,
+      usedBefore: false,
+      shopMyLtk: 'unknown',
+      flaggedBefore: false,
+      engagement: 0,
+      avgViews: 0,
+      avgLikes: 0,
+      photo: null,
+    };
+    setCreators(prev => [...prev, newCreator]);
+    addToast(`${addForm.name} added`);
+    setAddForm({ name: '', benableId: '' });
+    setShowAddModal(false);
   };
 
   const toggleSelect = (id) => {
@@ -129,73 +200,103 @@ export default function CreatorProgram() {
     setAssignCampaign('');
   };
 
-  // Counts per status
-  const counts = useMemo(() => {
-    const c = { not_in_program: 0, invited_to_program: 0, in_program: 0 };
-    programCreators.forEach(cr => { if (c[cr.stage] !== undefined) c[cr.stage]++; });
-    return c;
-  }, [programCreators]);
+  // Total count (unfiltered)
+  const totalCount = creators.filter(c => ['not_in_program', 'invited_to_program', 'in_program'].includes(c.stage)).length;
 
   return (
     <div className="page-container">
       <div className="page-header">
         <h1 className="page-title">Creator Program</h1>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-secondary" onClick={() => fileRef.current?.click()}>
-            <Upload size={16} /> Upload CSV
+      </div>
+
+      {/* Upload Creators tile */}
+      <div style={styles.uploadTile}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px 0' }}>Upload Creators</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button
+                style={styles.chooseFileBtn}
+                onClick={() => fileRef.current?.click()}
+              >
+                Choose File
+              </button>
+              <span style={{ fontSize: 13, color: 'var(--color-text-tertiary)' }}>No file chosen</span>
+              <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleFileUpload} />
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 8, marginBottom: 0 }}>
+              CSV format: Name, Social Handle, Platform, Follower Count
+            </p>
+          </div>
+          <button
+            style={styles.addCreatorBtn}
+            onClick={() => setShowAddModal(true)}
+          >
+            <Plus size={16} /> Add Creator
           </button>
-          <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleFileUpload} />
         </div>
       </div>
 
-      {/* Status counts */}
-      <div style={styles.statusBar}>
-        {PROGRAM_STAGES.map(s => (
-          <div key={s.key} style={{ ...styles.statusBox, borderColor: s.bg }}>
-            <span style={{ fontSize: 20, fontWeight: 700, color: s.bg }}>{counts[s.key]}</span>
-            <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{s.label}</span>
-          </div>
-        ))}
+      {/* Search & Filter bar */}
+      <div style={styles.filterBar}>
+        <div style={styles.searchWrap}>
+          <Search size={16} color="#9CA3AF" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+          <input
+            type="text"
+            placeholder="Search by name, handle or Benable ID..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={styles.searchInput}
+          />
+        </div>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={styles.filterSelect}>
+          <option value="all">All Status</option>
+          {PROGRAM_STAGES.map(s => (
+            <option key={s.key} value={s.key}>{s.label}</option>
+          ))}
+        </select>
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={styles.filterSelect}>
+          <option value="newest">Newest First</option>
+          <option value="az">A → Z</option>
+          <option value="za">Z → A</option>
+        </select>
+        <span style={styles.countBadge}>All Creators {totalCount}</span>
       </div>
 
       {/* Bulk actions bar */}
-        <div style={styles.bulkBar}>
-          <span>Selected rows: {selected.size}</span>
-          <div style={styles.bulkDivider} />
-          <button className="btn btn-primary btn-sm" onClick={() => bulkChangeStatus('invited_to_program')} disabled={selected.size === 0}>
-            <Check size={14} /> Invite to Program
-          </button>
-          <button className="btn btn-sm" style={{ background: selected.size > 0 ? '#3D8B5E' : '#9CA3AF', color: '#fff', border: 'none' }} onClick={() => bulkChangeStatus('in_program')} disabled={selected.size === 0}>
-            <Check size={14} /> Mark In Program
-          </button>
-          <div style={styles.bulkDivider} />
-          <select
-            value={assignCampaign}
-            onChange={e => setAssignCampaign(e.target.value)}
-            style={styles.statusSelect}
-          >
-            <option value="">Select campaign...</option>
-            {liveCampaigns.map(c => (
-              <option key={c.id} value={c.id}>{c.brand || c.name}</option>
-            ))}
-          </select>
-          <button
-            className="btn btn-sm"
-            style={{ background: (selected.size > 0 && assignCampaign) ? '#7C3AED' : '#9CA3AF', color: '#fff', border: 'none' }}
-            onClick={bulkAssignCampaign}
-            disabled={!assignCampaign || selected.size === 0}
-          >
-            <Send size={14} /> Assign to Campaign
-          </button>
-        </div>
+      <div style={styles.bulkBar}>
+        <span>Selected rows: {selected.size}</span>
+        <div style={styles.bulkDivider} />
+        <button className="btn btn-primary btn-sm" onClick={() => bulkChangeStatus('invited_to_program')} disabled={selected.size === 0}>
+          <Check size={14} /> Invite to Program
+        </button>
+        <button className="btn btn-sm" style={{ background: selected.size > 0 ? '#3D8B5E' : '#9CA3AF', color: '#fff', border: 'none' }} onClick={() => bulkChangeStatus('in_program')} disabled={selected.size === 0}>
+          <Check size={14} /> Mark In Program
+        </button>
+        <div style={styles.bulkDivider} />
+        <select
+          value={assignCampaign}
+          onChange={e => setAssignCampaign(e.target.value)}
+          style={styles.filterSelect}
+        >
+          <option value="">Select campaign...</option>
+          {liveCampaigns.map(c => (
+            <option key={c.id} value={c.id}>{c.brand || c.name}</option>
+          ))}
+        </select>
+        <button
+          className="btn btn-sm"
+          style={{ background: (selected.size > 0 && assignCampaign) ? '#7C3AED' : '#9CA3AF', color: '#fff', border: 'none' }}
+          onClick={bulkAssignCampaign}
+          disabled={!assignCampaign || selected.size === 0}
+        >
+          <Send size={14} /> Assign to Campaign
+        </button>
+      </div>
 
       {programCreators.length === 0 ? (
         <div style={styles.emptyState}>
-          <Upload size={32} color="var(--color-text-tertiary)" />
-          <p>No creators yet. Upload a CSV to get started.</p>
-          <p style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
-            CSV should have columns: name, handle, followers, niche, email, city
-          </p>
+          <p>No creators match your filters.</p>
         </div>
       ) : (
         <div className="table-container">
@@ -210,6 +311,7 @@ export default function CreatorProgram() {
                   />
                 </th>
                 <th>Creator</th>
+                <th>Benable ID</th>
                 <th>Followers</th>
                 <th>Email</th>
                 <th>Status</th>
@@ -237,6 +339,9 @@ export default function CreatorProgram() {
                         </div>
                       </div>
                     </td>
+                    <td style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'monospace' }}>
+                      {creator.benableId || '—'}
+                    </td>
                     <td style={{ fontSize: 13 }}>{formatFollowers(creator.followers)}</td>
                     <td style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{creator.email || '—'}</td>
                     <td>
@@ -258,7 +363,7 @@ export default function CreatorProgram() {
                       <select
                         value={creator.stage}
                         onChange={e => changeOneStatus(creator.id, e.target.value)}
-                        style={styles.statusSelect}
+                        style={styles.filterSelect}
                       >
                         {PROGRAM_STAGES.map(s => (
                           <option key={s.key} value={s.key}>{s.label}</option>
@@ -272,26 +377,125 @@ export default function CreatorProgram() {
           </table>
         </div>
       )}
+
+      {/* Add Creator Modal */}
+      {showAddModal && (
+        <div style={styles.overlay} onClick={() => setShowAddModal(false)}>
+          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Add Creator</h2>
+              <button style={styles.closeBtn} onClick={() => setShowAddModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Name</label>
+              <input
+                type="text"
+                placeholder="Emma Rodriguez"
+                value={addForm.name}
+                onChange={e => setAddForm(prev => ({ ...prev, name: e.target.value }))}
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Benable ID</label>
+              <input
+                type="text"
+                placeholder="BEN-XXXXXX (optional, auto-generated if blank)"
+                value={addForm.benableId}
+                onChange={e => setAddForm(prev => ({ ...prev, benableId: e.target.value }))}
+                style={styles.input}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
+              <button style={styles.cancelBtn} onClick={() => setShowAddModal(false)}>Cancel</button>
+              <button style={styles.submitBtn} onClick={handleAddCreator} disabled={!addForm.name.trim()}>
+                Add Creator
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 const styles = {
-  statusBar: {
-    display: 'flex',
-    gap: 'var(--space-3)',
+  uploadTile: {
+    padding: '20px 24px',
+    background: 'var(--color-bg-card)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)',
     marginBottom: 'var(--space-4)',
   },
-  statusBox: {
+  chooseFileBtn: {
+    padding: '6px 16px',
+    fontSize: 13,
+    fontWeight: 500,
+    fontFamily: 'inherit',
+    background: 'var(--color-bg-page)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-sm)',
+    cursor: 'pointer',
+    color: 'var(--color-text-primary)',
+  },
+  addCreatorBtn: {
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
-    padding: '12px 24px',
-    borderRadius: 'var(--radius-lg)',
-    border: '1px solid',
-    background: 'var(--color-bg-card)',
+    gap: 6,
+    padding: '8px 20px',
+    fontSize: 14,
+    fontWeight: 600,
+    fontFamily: 'inherit',
+    background: '#4F6EF7',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 'var(--radius-md)',
+    cursor: 'pointer',
+  },
+  filterBar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 'var(--space-4)',
+  },
+  searchWrap: {
+    position: 'relative',
     flex: 1,
-    textAlign: 'center',
+  },
+  searchInput: {
+    width: '100%',
+    padding: '8px 12px 8px 36px',
+    fontSize: 13,
+    fontFamily: 'inherit',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-md)',
+    outline: 'none',
+    background: 'var(--color-bg-card)',
+  },
+  filterSelect: {
+    height: 36,
+    fontSize: 13,
+    padding: '4px 8px',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--color-border)',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    background: 'var(--color-bg-card)',
+  },
+  countBadge: {
+    fontSize: 13,
+    fontWeight: 500,
+    padding: '6px 14px',
+    borderRadius: 'var(--radius-md)',
+    background: 'var(--color-bg-hover)',
+    color: 'var(--color-text-secondary)',
+    whiteSpace: 'nowrap',
+    border: '1px solid var(--color-border)',
   },
   bulkBar: {
     display: 'flex',
@@ -323,13 +527,77 @@ const styles = {
     fontSize: 14,
     textAlign: 'center',
   },
-  statusSelect: {
-    height: 30,
-    fontSize: 13,
-    padding: '2px 6px',
-    borderRadius: 'var(--radius-sm)',
-    border: '1px solid var(--color-border)',
+  // Modal styles
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.4)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  },
+  modal: {
+    background: '#fff',
+    borderRadius: 12,
+    padding: '32px',
+    width: 440,
+    maxWidth: '90vw',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  closeBtn: {
+    background: 'none',
+    border: 'none',
     cursor: 'pointer',
+    color: 'var(--color-text-tertiary)',
+    padding: 4,
+  },
+  formGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    display: 'block',
+    fontSize: 14,
+    fontWeight: 700,
+    marginBottom: 6,
+    color: 'var(--color-text-primary)',
+  },
+  input: {
+    width: '100%',
+    padding: '10px 14px',
+    fontSize: 14,
     fontFamily: 'inherit',
+    border: '1px solid #E5E7EB',
+    borderRadius: 8,
+    outline: 'none',
+    background: '#FAFAFA',
+  },
+  cancelBtn: {
+    padding: '10px 24px',
+    fontSize: 14,
+    fontWeight: 500,
+    fontFamily: 'inherit',
+    background: 'none',
+    border: '1px solid var(--color-border)',
+    borderRadius: 8,
+    cursor: 'pointer',
+    color: 'var(--color-text-primary)',
+  },
+  submitBtn: {
+    padding: '10px 24px',
+    fontSize: 14,
+    fontWeight: 600,
+    fontFamily: 'inherit',
+    background: '#4F6EF7',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 8,
+    cursor: 'pointer',
   },
 };
