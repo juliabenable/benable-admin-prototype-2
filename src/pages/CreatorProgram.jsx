@@ -159,14 +159,13 @@ export default function CreatorProgram() {
       </div>
 
       {/* Bulk actions bar */}
-      {selected.size > 0 && (
         <div style={styles.bulkBar}>
           <span>Selected rows: {selected.size}</span>
           <div style={styles.bulkDivider} />
-          <button className="btn btn-primary btn-sm" onClick={() => bulkChangeStatus('invited_to_program')}>
+          <button className="btn btn-primary btn-sm" onClick={() => bulkChangeStatus('invited_to_program')} disabled={selected.size === 0}>
             <Check size={14} /> Invite to Program
           </button>
-          <button className="btn btn-sm" style={{ background: '#3D8B5E', color: '#fff', border: 'none' }} onClick={() => bulkChangeStatus('in_program')}>
+          <button className="btn btn-sm" style={{ background: selected.size > 0 ? '#3D8B5E' : '#9CA3AF', color: '#fff', border: 'none' }} onClick={() => bulkChangeStatus('in_program')} disabled={selected.size === 0}>
             <Check size={14} /> Mark In Program
           </button>
           <div style={styles.bulkDivider} />
@@ -182,14 +181,13 @@ export default function CreatorProgram() {
           </select>
           <button
             className="btn btn-sm"
-            style={{ background: '#7C3AED', color: '#fff', border: 'none' }}
+            style={{ background: (selected.size > 0 && assignCampaign) ? '#7C3AED' : '#9CA3AF', color: '#fff', border: 'none' }}
             onClick={bulkAssignCampaign}
-            disabled={!assignCampaign}
+            disabled={!assignCampaign || selected.size === 0}
           >
             <Send size={14} /> Assign to Campaign
           </button>
         </div>
-      )}
 
       {programCreators.length === 0 ? (
         <div style={styles.emptyState}>
