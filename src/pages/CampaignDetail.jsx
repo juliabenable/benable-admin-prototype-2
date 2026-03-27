@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Upload, Send, BadgeCheck, Eye as EyeIcon, MoreHorizontal, AlertTriangle, Clock, AlertCircle, Check, Play, Image, Clipboard, Shield, Sparkles, ExternalLink, ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { Upload, Send, BadgeCheck, Eye as EyeIcon, MoreHorizontal, AlertTriangle, Clock, AlertCircle, Check, Play, Image, Clipboard, Shield, Sparkles, ExternalLink, ChevronDown, ChevronRight, Plus, LayoutList } from 'lucide-react';
 import { useAppState } from '../hooks/useAppState';
 import StatusBadge, { LiveBadge, ArchivedBadge, DaysBadge } from '../components/StatusBadge';
 import Avatar, { BrandAvatar } from '../components/Avatar';
@@ -8,6 +8,7 @@ import CreatorModal from '../components/CreatorModal';
 import NudgeDialog from '../components/NudgeDialog';
 import ImportDialog from '../components/ImportDialog';
 import CreatorSetupCard from '../components/CreatorSetupCard';
+import DraftPortalForm from '../components/DraftPortalForm';
 import { STAGES, PHASES, STAGE_MAP, KANBAN_STAGES, CAMPAIGN_BRIEFS } from '../utils/stageConfig';
 import { formatFollowers, formatEngagement } from '../utils/formatters';
 
@@ -20,6 +21,7 @@ export default function CampaignDetailContent({ campaignId }) {
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [nudgeCreator, setNudgeCreator] = useState(null);
   const [showImport, setShowImport] = useState(false);
+  const [showDraftPortal, setShowDraftPortal] = useState(false);
   const [dragCreator, setDragCreator] = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
   const [selectedSetup, setSelectedSetup] = useState([]);
@@ -80,6 +82,9 @@ export default function CampaignDetailContent({ campaignId }) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowDraftPortal(true)}>
+            <LayoutList size={14} /> Draft Portal
+          </button>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>
             <Upload size={14} /> Import Creators
           </button>
@@ -260,6 +265,7 @@ export default function CampaignDetailContent({ campaignId }) {
       {selectedCreator && <CreatorModal creator={selectedCreator} onClose={() => setSelectedCreator(null)} />}
       {nudgeCreator && <NudgeDialog creator={nudgeCreator} campaign={campaign} onClose={() => setNudgeCreator(null)} />}
       {showImport && <ImportDialog campaignId={campaignId} campaignName={`${campaign.brand || campaign.name} — ${campaign.name}`} onClose={() => setShowImport(false)} />}
+      {showDraftPortal && <DraftPortalForm campaignId={campaignId} campaignName={`${campaign.brand || campaign.name}`} onClose={() => setShowDraftPortal(false)} />}
     </div>
   );
 }

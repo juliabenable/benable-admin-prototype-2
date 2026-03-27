@@ -3,11 +3,15 @@ import { Send } from 'lucide-react';
 import Modal from './Modal';
 import { useAppState } from '../hooks/useAppState';
 import { getTemplatesForStage, fillTemplate } from '../data/emailTemplates';
+import { STAGES } from '../utils/stageConfig';
 import { formatDateTime } from '../utils/formatters';
 
 export default function NudgeDialog({ creator, campaign, onClose }) {
   const { addToast, addEmail, logActivity } = useAppState();
-  const templates = getTemplatesForStage(creator.stage);
+
+  // Step dropdown — defaults to creator's current stage
+  const [selectedStep, setSelectedStep] = useState(creator.stage);
+  const templates = getTemplatesForStage(selectedStep);
   const [selectedTemplate, setSelectedTemplate] = useState(templates[0]?.key || '');
   const [emailBody, setEmailBody] = useState('');
   const [subject, setSubject] = useState('');
@@ -17,22 +21,35 @@ export default function NudgeDialog({ creator, campaign, onClose }) {
     campaignName: campaign?.name || 'Campaign',
   };
 
+  // When step changes, update templates
   useEffect(() => {
-    const tpl = templates.find(t => t.key === selectedTemplate);
+    const newTemplates = getTemplatesForStage(selectedStep);
+    setSelectedTemplate(newTemplates[0]?.key || '');
+  }, [selectedStep]);
+
+  useEffect(() => {
+    const allTemplates = getTemplatesForStage(selectedStep);
+    const tpl = allTemplates.find(t => t.key === selectedTemplate);
     if (tpl) {
       setEmailBody(fillTemplate(tpl.body, templateData));
       setSubject(fillTemplate(tpl.subject, templateData));
     }
-  }, [selectedTemplate]);
+  }, [selectedTemplate, selectedStep]);
 
   const handleSend = () => {
+    const stepLabel = STAGES.find(s => s.key === selectedStep)?.label || selectedStep;
     addEmail(creator.id, subject, 'nudge');
-    logActivity(`Sent nudge to ${creator.name}: "${subject}"`, 'Kate', creator.id);
-    addToast(`Nudge sent to ${creator.name}`);
+    logActivity(`Sent nudge to ${creator.name} for step "${stepLabel}": "${subject}"`, 'Kate', creator.id);
+    addToast(`Nudge sent to ${creator.name} for: ${stepLabel}`);
     onClose();
   };
 
   const lastEmail = creator.emails[0];
+
+  // Nudge-relevant stages (exclude terminal states)
+  const nudgeStages = STAGES.filter(s =>
+    !['completed', 'denied', 'content_approved', 'posted'].includes(s.key)
+  );
 
   return (
     <Modal title={`Send Nudge to ${creator.name}`} onClose={onClose} maxWidth={520}>
@@ -42,10 +59,26 @@ export default function NudgeDialog({ creator, campaign, onClose }) {
           <span style={styles.lastEmailText}>{lastEmail.subject} — {formatDateTime(lastEmail.date)}</span>
         </div>
       )}
+
+      {/* Step dropdown */}
+      <div style={styles.field}>
+        <label style={styles.label}>Which step is this nudge for?</label>
+        <select value={selectedStep} onChange={e => setSelectedStep(e.target.value)} style={{ width: '100%' }}>
+          {nudgeStages.map(s => (
+            <option key={s.key} value={s.key}>
+              {s.label}{s.key === creator.stage ? ' (current)' : ''}
+            </option>
+          ))}
+        </select>
+        <span style={styles.helperText}>
+          Current stage: {STAGES.find(s => s.key === creator.stage)?.label}
+        </span>
+      </div>
+
       <div style={styles.field}>
         <label style={styles.label}>Template</label>
         <select value={selectedTemplate} onChange={e => setSelectedTemplate(e.target.value)} style={{ width: '100%' }}>
-          {templates.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+          {getTemplatesForStage(selectedStep).map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
         </select>
       </div>
       <div style={styles.field}>
@@ -71,6 +104,7 @@ const styles = {
   lastEmailText: { fontSize: 13, color: 'var(--color-info-text)' },
   field: { marginBottom: 'var(--space-4)' },
   label: { display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-1)' },
+  helperText: { display: 'block', fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 4, fontStyle: 'italic' },
   sendingFrom: { fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)' },
   actions: { display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' },
 };
