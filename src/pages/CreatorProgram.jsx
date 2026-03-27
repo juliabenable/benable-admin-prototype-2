@@ -243,14 +243,15 @@ export default function CreatorProgram() {
                     <td style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{creator.email || '—'}</td>
                     <td>
                       <span style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        padding: '5px 14px',
-                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        padding: '2px 8px',
+                        borderRadius: 3,
                         color: stageInfo?.color,
                         background: stageInfo?.bg,
                         whiteSpace: 'nowrap',
                         display: 'inline-block',
+                        letterSpacing: '0.01em',
                       }}>
                         {stageInfo?.label}
                       </span>
