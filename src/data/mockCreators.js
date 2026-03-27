@@ -499,5 +499,5 @@ MOCK_CREATORS.forEach((c, i) => {
   c.igUrl = urls.igUrl || null;
   c.tiktokUrl = urls.tiktokUrl || null;
   c.posts = generatePosts(c.id, c.niche, c.platform);
-  c.benableId = 'BEN-' + String(1000 + i).padStart(4, '0');
+  c.benableId = 1000 + i * 37;
 });

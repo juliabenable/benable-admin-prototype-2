@@ -13,7 +13,7 @@ const PROGRAM_STAGES = [
 const STAGE_LABELS = Object.fromEntries(PROGRAM_STAGES.map(s => [s.key, s]));
 
 function generateBenableId() {
-  return 'BEN-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  return Math.floor(Math.random() * 999000 + 1000);
 }
 
 function parseCSV(text) {
@@ -32,7 +32,7 @@ function parseCSV(text) {
     const email = row.email || '';
     const city = row.city || row.location || '';
     const platform = row.platform || 'ig';
-    const benableId = row.benable_id || row['benable id'] || generateBenableId();
+    const benableId = parseInt(row.benable_id || row['benable id'] || '0', 10) || generateBenableId();
 
     const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
@@ -62,7 +62,7 @@ export default function CreatorProgram() {
       list = list.filter(c =>
         c.name.toLowerCase().includes(q) ||
         c.handle.toLowerCase().includes(q) ||
-        (c.benableId && c.benableId.toLowerCase().includes(q))
+        (c.benableId && String(c.benableId).includes(q))
       );
     }
 
@@ -404,7 +404,7 @@ export default function CreatorProgram() {
               <label style={styles.label}>Benable ID</label>
               <input
                 type="text"
-                placeholder="BEN-XXXXXX (optional, auto-generated if blank)"
+                placeholder="e.g. 12345 (optional, auto-generated if blank)"
                 value={addForm.benableId}
                 onChange={e => setAddForm(prev => ({ ...prev, benableId: e.target.value }))}
                 style={styles.input}
@@ -447,14 +447,14 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    padding: '8px 20px',
+    padding: '10px 24px',
     fontSize: 14,
     fontWeight: 600,
     fontFamily: 'inherit',
-    background: '#4F6EF7',
+    background: '#2196F3',
     color: '#fff',
     border: 'none',
-    borderRadius: 'var(--radius-md)',
+    borderRadius: 4,
     cursor: 'pointer',
   },
   filterBar: {
@@ -539,7 +539,7 @@ const styles = {
   },
   modal: {
     background: '#fff',
-    borderRadius: 12,
+    borderRadius: 8,
     padding: '32px',
     width: 440,
     maxWidth: '90vw',
@@ -594,10 +594,10 @@ const styles = {
     fontSize: 14,
     fontWeight: 600,
     fontFamily: 'inherit',
-    background: '#4F6EF7',
+    background: '#2196F3',
     color: '#fff',
     border: 'none',
-    borderRadius: 8,
+    borderRadius: 6,
     cursor: 'pointer',
   },
 };
