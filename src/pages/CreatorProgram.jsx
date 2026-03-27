@@ -5,9 +5,9 @@ import Avatar from '../components/Avatar';
 import { formatFollowers } from '../utils/formatters';
 
 const PROGRAM_STAGES = [
-  { key: 'not_in_program', label: 'Not in Creator Program', color: '#fff', bg: '#6B7280' },
-  { key: 'invited_to_program', label: 'Invited to Creator Program', color: '#fff', bg: '#F59E0B' },
-  { key: 'in_program', label: 'In Creator Program', color: '#fff', bg: '#22C55E' },
+  { key: 'not_in_program', label: 'Not in Creator Program', color: '#6B7280', bg: '#F3F4F6' },
+  { key: 'invited_to_program', label: 'Invited to Creator Program', color: '#92400E', bg: '#FEF3C7' },
+  { key: 'in_program', label: 'In Creator Program', color: '#166534', bg: '#DCFCE7' },
 ];
 
 const STAGE_LABELS = Object.fromEntries(PROGRAM_STAGES.map(s => [s.key, s]));
