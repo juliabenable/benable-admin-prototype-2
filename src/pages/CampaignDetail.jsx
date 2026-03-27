@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Upload, Send, BadgeCheck, Eye as EyeIcon, MoreHorizontal, AlertTriangle, Clock, AlertCircle, Check, Play, Image, Clipboard, Shield, Sparkles, ExternalLink, ChevronDown, ChevronRight, Plus, LayoutList } from 'lucide-react';
+import { Upload, Send, BadgeCheck, Eye as EyeIcon, MoreHorizontal, AlertTriangle, Clock, AlertCircle, Check, Play, Image, Clipboard, Shield, Sparkles, ExternalLink, ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import { useAppState } from '../hooks/useAppState';
 import StatusBadge, { LiveBadge, ArchivedBadge, DaysBadge } from '../components/StatusBadge';
 import Avatar, { BrandAvatar } from '../components/Avatar';
@@ -8,7 +8,6 @@ import CreatorModal from '../components/CreatorModal';
 import NudgeDialog from '../components/NudgeDialog';
 import ImportDialog from '../components/ImportDialog';
 import CreatorSetupCard from '../components/CreatorSetupCard';
-import DraftPortalForm from '../components/DraftPortalForm';
 import { STAGES, PHASES, STAGE_MAP, KANBAN_STAGES, CAMPAIGN_BRIEFS } from '../utils/stageConfig';
 import { formatFollowers, formatEngagement } from '../utils/formatters';
 
@@ -17,32 +16,13 @@ export default function CampaignDetailContent({ campaignId }) {
   const campaign = campaigns.find(c => c.id === campaignId);
   const campaignCreators = creators.filter(c => c.campaignId === campaignId);
 
-  const [view, setView] = useState('kanban');
+  const [view, setView] = useState('list');
   const [selectedCreator, setSelectedCreator] = useState(null);
   const [nudgeCreator, setNudgeCreator] = useState(null);
   const [showImport, setShowImport] = useState(false);
-  const [showDraftPortal, setShowDraftPortal] = useState(false);
-  const [dragCreator, setDragCreator] = useState(null);
-  const [dropTarget, setDropTarget] = useState(null);
   const [selectedSetup, setSelectedSetup] = useState([]);
   const [top3, setTop3] = useState([]);
   const [expandedSetupId, setExpandedSetupId] = useState(null);
-
-  const handleDrop = (stageKey) => {
-    if (dragCreator && dragCreator.stage !== stageKey) {
-      const oldLabel = STAGE_MAP[dragCreator.stage]?.label;
-      const newLabel = STAGE_MAP[stageKey]?.label;
-      const prevStage = dragCreator.stage;
-      const creatorId = dragCreator.id;
-      moveCreatorStage(creatorId, stageKey);
-      logActivity(`Moved ${dragCreator.name} from ${oldLabel} to ${newLabel}`, 'Kate', creatorId);
-      addToast(`Moved ${dragCreator.name} to ${newLabel}`, 'success', () => {
-        moveCreatorStage(creatorId, prevStage);
-      });
-    }
-    setDragCreator(null);
-    setDropTarget(null);
-  };
 
   // Grouped list sections
   const listSections = useMemo(() => {
@@ -82,14 +62,11 @@ export default function CampaignDetailContent({ campaignId }) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
-          <button className="btn btn-secondary btn-sm" onClick={() => setShowDraftPortal(true)}>
-            <LayoutList size={14} /> Draft Portal
-          </button>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>
             <Upload size={14} /> Import Creators
           </button>
           <div style={styles.toggle}>
-            {['setup', 'kanban', 'list'].map(v => (
+            {['setup', 'list'].map(v => (
               <button key={v} style={{ ...styles.toggleBtn, ...(view === v ? styles.toggleActive : {}) }} onClick={() => setView(v)}>
                 {v.charAt(0).toUpperCase() + v.slice(1)}
               </button>
@@ -153,107 +130,7 @@ export default function CampaignDetailContent({ campaignId }) {
         </div>
       )}
 
-      {/* ===== KANBAN VIEW ===== */}
-      {view === 'kanban' && (
-        <div style={styles.kanban}>
-          {PHASES.filter(p => p.key !== 'denied').map(phase => {
-            const phaseStages = KANBAN_STAGES.filter(s => s.phase === phase.key);
-            const phaseCreators = campaignCreators.filter(c => phaseStages.some(s => s.key === c.stage));
-            return (
-              <div key={phase.key} style={styles.phaseGroup}>
-                <div style={{ ...styles.phaseLabel, color: phase.color }}>
-                  <span style={{ ...styles.phaseDot, background: phase.color }} />
-                  {phase.label}
-                  <span style={styles.phaseCount}>{phaseCreators.length}</span>
-                </div>
-                <div style={styles.stageColumns}>
-                  {phaseStages.map(stage => {
-                    const stageCreators = campaignCreators
-                      .filter(c => c.stage === stage.key)
-                      .sort((a, b) => (a.isOverdue === b.isOverdue ? b.daysInStage - a.daysInStage : a.isOverdue ? -1 : 1));
-                    const isDropping = dropTarget === stage.key && dragCreator?.stage !== stage.key;
-                    const isReviewColumn = stage.key === 'content_submitted';
-                    const hasReviewItems = isReviewColumn && stageCreators.length > 0;
-                    return (
-                      <div
-                        key={stage.key}
-                        style={{
-                          ...styles.column,
-                          ...(isDropping ? styles.columnDrop : {}),
-                          ...(hasReviewItems ? styles.columnReview : {}),
-                        }}
-                        onDragOver={e => { e.preventDefault(); setDropTarget(stage.key); }}
-                        onDragLeave={() => setDropTarget(null)}
-                        onDrop={() => handleDrop(stage.key)}
-                      >
-                        <div style={styles.colHeader}>
-                          <span style={styles.colTitle}>{stage.label}</span>
-                          <span style={styles.colCount}>{stageCreators.length}</span>
-                        </div>
-                        <div style={styles.colCards}>
-                          {stageCreators.length === 0 ? (
-                            <div style={styles.emptyCol}>Drop here</div>
-                          ) : stageCreators.map(creator => {
-                            const urgency = getUrgencyState(creator);
-                            const urgStyles = getUrgencyCardStyles(urgency.state, true);
-                            const isReviewCard = creator.stage === 'content_submitted';
-                            return (
-                            <div
-                              key={creator.id}
-                              className={isReviewCard ? 'review-glow' : ''}
-                              style={{
-                                ...styles.card,
-                                ...urgStyles,
-                                ...(isReviewCard ? styles.cardReview : {}),
-                                opacity: dragCreator?.id === creator.id ? 0.4 : (urgStyles.opacity || 1),
-                                transition: 'all 0.2s ease',
-                              }}
-                              draggable
-                              onDragStart={() => setDragCreator(creator)}
-                              onClick={() => setSelectedCreator(creator)}
-                            >
-                              {/* Row 1: Avatar + Name + urgency icon */}
-                              <div style={styles.cardRow1}>
-                                <Avatar initials={creator.initials} size={40} photo={creator.photo} />
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                    <span style={{ ...styles.cardName, fontWeight: urgency.state === 'overdue' || urgency.state === 'due_soon' ? 700 : 600 }}>{creator.name}</span>
-                                    <BadgeCheck size={14} color="#5B8EC9" />
-                                  </div>
-                                  <div style={styles.cardHandle}>{creator.handle}</div>
-                                </div>
-                                {/* Urgency icon — top right */}
-                                {urgency.state === 'overdue' && (
-                                  <span style={{ ...styles.urgencyIconInner, background: 'var(--overdue-icon-bg)', color: 'var(--overdue-text)' }}>!</span>
-                                )}
-                                {urgency.state === 'due_soon' && (
-                                  <span style={{ ...styles.urgencyIconInner, background: 'var(--due-soon-icon-bg)', color: 'var(--due-soon-text)' }}><Clock size={12} /></span>
-                                )}
-                              </div>
-                              {/* Row 2: Status text — full width below photo+name */}
-                              <div style={{
-                                fontSize: 12,
-                                fontWeight: urgency.state === 'overdue' || urgency.state === 'due_soon' ? 600 : 400,
-                                color: urgency.state === 'overdue' ? 'var(--overdue-text)' : urgency.state === 'due_soon' ? 'var(--due-soon-text)' : 'var(--color-text-tertiary)',
-                                marginTop: 6,
-                                textDecoration: urgency.state === 'done' ? 'line-through' : 'none',
-                              }}>
-                                {urgency.actionText}
-                              </div>
-                            </div>
-                          );})}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ===== GROUPED LIST VIEW ===== */}
+      {/* ===== LIST VIEW ===== */}
       {view === 'list' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
           {listSections.map(section => (
@@ -265,7 +142,6 @@ export default function CampaignDetailContent({ campaignId }) {
       {selectedCreator && <CreatorModal creator={selectedCreator} onClose={() => setSelectedCreator(null)} />}
       {nudgeCreator && <NudgeDialog creator={nudgeCreator} campaign={campaign} onClose={() => setNudgeCreator(null)} />}
       {showImport && <ImportDialog campaignId={campaignId} campaignName={`${campaign.brand || campaign.name} — ${campaign.name}`} onClose={() => setShowImport(false)} />}
-      {showDraftPortal && <DraftPortalForm campaignId={campaignId} campaignName={`${campaign.brand || campaign.name}`} onClose={() => setShowDraftPortal(false)} />}
     </div>
   );
 }
