@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Upload, Check } from 'lucide-react';
+import { Upload, Check, Send } from 'lucide-react';
 import { useAppState } from '../hooks/useAppState';
 import Avatar from '../components/Avatar';
 import { formatFollowers } from '../utils/formatters';
@@ -36,9 +36,11 @@ function parseCSV(text) {
 }
 
 export default function CreatorProgram() {
-  const { creators, setCreators, addToast } = useAppState();
+  const { creators, setCreators, campaigns, addToast } = useAppState();
   const fileRef = useRef(null);
   const [selected, setSelected] = useState(new Set());
+  const [assignCampaign, setAssignCampaign] = useState('');
+  const liveCampaigns = campaigns.filter(c => c.status === 'live');
 
   // Only show creators in program-level stages (not assigned to any campaign yet, or in program stages)
   const programCreators = useMemo(() => {
@@ -116,6 +118,17 @@ export default function CreatorProgram() {
     addToast(`${creator?.name} → ${STAGE_LABELS[newStage]?.label}`);
   };
 
+  const bulkAssignCampaign = () => {
+    if (selected.size === 0 || !assignCampaign) return;
+    const camp = campaigns.find(c => c.id === assignCampaign);
+    setCreators(prev => prev.map(c =>
+      selected.has(c.id) ? { ...c, campaignId: assignCampaign, stage: 'assigned_to_campaign', daysInStage: 0, isOverdue: false } : c
+    ));
+    addToast(`${selected.size} creators assigned to ${camp?.brand || camp?.name}`);
+    setSelected(new Set());
+    setAssignCampaign('');
+  };
+
   // Counts per status
   const counts = useMemo(() => {
     const c = { not_in_program: 0, invited_to_program: 0, in_program: 0 };
@@ -149,11 +162,31 @@ export default function CreatorProgram() {
       {selected.size > 0 && (
         <div style={styles.bulkBar}>
           <span>Selected rows: {selected.size}</span>
+          <div style={styles.bulkDivider} />
           <button className="btn btn-primary btn-sm" onClick={() => bulkChangeStatus('invited_to_program')}>
             <Check size={14} /> Invite to Program
           </button>
           <button className="btn btn-sm" style={{ background: '#3D8B5E', color: '#fff', border: 'none' }} onClick={() => bulkChangeStatus('in_program')}>
             <Check size={14} /> Mark In Program
+          </button>
+          <div style={styles.bulkDivider} />
+          <select
+            value={assignCampaign}
+            onChange={e => setAssignCampaign(e.target.value)}
+            style={styles.statusSelect}
+          >
+            <option value="">Select campaign...</option>
+            {liveCampaigns.map(c => (
+              <option key={c.id} value={c.id}>{c.brand || c.name}</option>
+            ))}
+          </select>
+          <button
+            className="btn btn-sm"
+            style={{ background: '#7C3AED', color: '#fff', border: 'none' }}
+            onClick={bulkAssignCampaign}
+            disabled={!assignCampaign}
+          >
+            <Send size={14} /> Assign to Campaign
           </button>
         </div>
       )}
@@ -272,6 +305,12 @@ const styles = {
     marginBottom: 'var(--space-4)',
     fontSize: 14,
     fontWeight: 500,
+  },
+  bulkDivider: {
+    width: 1,
+    height: 24,
+    background: 'var(--color-border)',
+    flexShrink: 0,
   },
   emptyState: {
     display: 'flex',
