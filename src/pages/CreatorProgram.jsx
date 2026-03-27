@@ -5,9 +5,9 @@ import Avatar from '../components/Avatar';
 import { formatFollowers } from '../utils/formatters';
 
 const PROGRAM_STAGES = [
-  { key: 'not_in_program', label: 'Not in Creator Program', color: '#6B7280', bg: '#F3F4F6' },
-  { key: 'invited_to_program', label: 'Invited to Creator Program', color: '#4A7FC7', bg: '#EBF1FA' },
-  { key: 'in_program', label: 'In Creator Program', color: '#3D8B5E', bg: '#EDF7F0' },
+  { key: 'not_in_program', label: 'Not in Creator Program', color: '#fff', bg: '#6B7280' },
+  { key: 'invited_to_program', label: 'Invited to Creator Program', color: '#fff', bg: '#F59E0B' },
+  { key: 'in_program', label: 'In Creator Program', color: '#fff', bg: '#22C55E' },
 ];
 
 const STAGE_LABELS = Object.fromEntries(PROGRAM_STAGES.map(s => [s.key, s]));
@@ -151,8 +151,8 @@ export default function CreatorProgram() {
       {/* Status counts */}
       <div style={styles.statusBar}>
         {PROGRAM_STAGES.map(s => (
-          <div key={s.key} style={{ ...styles.statusBox, borderColor: s.color }}>
-            <span style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{counts[s.key]}</span>
+          <div key={s.key} style={{ ...styles.statusBox, borderColor: s.bg }}>
+            <span style={{ fontSize: 20, fontWeight: 700, color: s.bg }}>{counts[s.key]}</span>
             <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{s.label}</span>
           </div>
         ))}
@@ -213,7 +213,6 @@ export default function CreatorProgram() {
                 </th>
                 <th>Creator</th>
                 <th>Followers</th>
-                <th>Niche</th>
                 <th>Email</th>
                 <th>Status</th>
                 <th>Select to change</th>
@@ -241,17 +240,17 @@ export default function CreatorProgram() {
                       </div>
                     </td>
                     <td style={{ fontSize: 13 }}>{formatFollowers(creator.followers)}</td>
-                    <td style={{ fontSize: 13 }}>{creator.niche || '—'}</td>
                     <td style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{creator.email || '—'}</td>
                     <td>
                       <span style={{
                         fontSize: 12,
-                        fontWeight: 500,
-                        padding: '3px 10px',
-                        borderRadius: 'var(--radius-full)',
+                        fontWeight: 600,
+                        padding: '5px 14px',
+                        borderRadius: 4,
                         color: stageInfo?.color,
                         background: stageInfo?.bg,
                         whiteSpace: 'nowrap',
+                        display: 'inline-block',
                       }}>
                         {stageInfo?.label}
                       </span>
