@@ -22,7 +22,7 @@ export default function App() {
             <Route path="/admin/draft-portal" element={<DraftPortal />} />
             <Route path="/admin/review" element={<ReviewQueue />} />
             <Route path="/admin/spreadsheet" element={<Spreadsheet />} />
-            <Route path="*" element={<Navigate to="/admin/creator-program" replace />} />
+            <Route path="*" element={<Navigate to="/admin/draft-portal" replace />} />
           </Routes>
         </main>
         <ToastContainer />
