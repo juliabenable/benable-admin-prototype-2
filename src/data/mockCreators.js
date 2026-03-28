@@ -500,4 +500,8 @@ MOCK_CREATORS.forEach((c, i) => {
   c.tiktokUrl = urls.tiktokUrl || null;
   c.posts = generatePosts(c.id, c.niche, c.platform);
   c.benableId = 1000 + i * 37;
+  // Stagger dates over the last 30 days
+  const d = new Date('2026-03-27');
+  d.setDate(d.getDate() - (i * 2) % 30);
+  c.dateAdded = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 });

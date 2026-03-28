@@ -106,6 +106,7 @@ export default function CreatorProgram() {
         usedBefore: false,
         shopMyLtk: 'unknown',
         flaggedBefore: false,
+        dateAdded: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         engagement: (Math.random() * 4 + 1).toFixed(1),
         avgViews: Math.floor(Math.random() * 30000) + 5000,
         avgLikes: Math.floor(Math.random() * 5000) + 500,
@@ -134,6 +135,7 @@ export default function CreatorProgram() {
       initials,
       campaignId: null,
       stage: 'not_in_program',
+      dateAdded: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       daysInStage: 0,
       isOverdue: false,
       notes: [],
@@ -282,6 +284,7 @@ export default function CreatorProgram() {
                 <th>Creator</th>
                 <th>Benable ID</th>
                 <th>Email</th>
+                <th>Date Added</th>
                 <th>Status</th>
                 <th>Campaign</th>
                 <th>Select to change</th>
@@ -312,6 +315,9 @@ export default function CreatorProgram() {
                       {creator.benableId || '—'}
                     </td>
                     <td style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{creator.email || '—'}</td>
+                    <td style={{ fontSize: 12, color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' }}>
+                      {creator.dateAdded || '—'}
+                    </td>
                     <td>
                       <span style={{
                         fontSize: 11,
