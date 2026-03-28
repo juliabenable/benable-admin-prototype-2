@@ -392,7 +392,7 @@ export default function CreatorProgram() {
                         </div>
                       )}
                     </td>
-                    <td style={{ ...styles.td, fontSize: 12, textAlign: 'right', paddingRight: 6, color: creator.daysInStage > 2 ? '#DC2626' : '#94A3B8', fontWeight: creator.daysInStage > 2 ? 600 : 400, whiteSpace: 'nowrap' }}>
+                    <td style={{ ...styles.td, fontSize: 12, textAlign: 'right', paddingRight: 6, color: creator.stage === 'invited_to_program' && creator.daysInStage > 2 ? '#DC2626' : '#94A3B8', fontWeight: creator.stage === 'invited_to_program' && creator.daysInStage > 2 ? 600 : 400, whiteSpace: 'nowrap' }}>
                       {creator.daysInStage != null ? `${creator.daysInStage}d` : '—'}
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right', paddingLeft: 6, fontSize: 12, color: '#94A3B8', whiteSpace: 'nowrap' }}>
