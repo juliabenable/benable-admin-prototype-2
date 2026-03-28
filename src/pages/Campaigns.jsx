@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useAppState } from '../hooks/useAppState';
 import Avatar from '../components/Avatar';
 import { formatFollowers } from '../utils/formatters';
-import { ChevronRight, X, Send, Check, Image, Sparkles, FileText, Shield, Search } from 'lucide-react';
+import { ChevronRight, X, Send, Check, Image, Sparkles, Search } from 'lucide-react';
 
 const CAMPAIGN_STAGES = [
   { key: 'invited_to_campaign', label: 'Invited to Campaign', color: '#92400E', bg: '#FEF3C7' },
@@ -122,72 +122,54 @@ export default function Campaigns() {
           <span style={styles.countBadge}>{campaignCreators.length} creators</span>
         </div>
 
-        {/* Table */}
+        {/* Rows */}
         {campaignCreators.length === 0 ? (
           <div style={styles.emptyState}>
             No creators in this status for {activeCampaign?.brand || activeCampaign?.name}.
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={styles.theadRow}>
-                <th style={styles.th}>CREATOR</th>
-                <th style={styles.th}>STATUS</th>
-                <th style={styles.th}>DAYS</th>
-                <th style={styles.th}>PLATFORM</th>
-                <th style={{ ...styles.th, width: 30 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {campaignCreators.map(creator => {
-                const stageInfo = STAGE_MAP[creator.stage] || { label: creator.stage, color: '#6B7280', bg: '#F3F4F6' };
-                const isExpanded = expandedId === creator.id;
-                const hasContent = creator.stage === 'content_submitted' && creator.contentSubmission;
+          <div>
+            {campaignCreators.map(creator => {
+              const stageInfo = STAGE_MAP[creator.stage] || { label: creator.stage, color: '#6B7280', bg: '#F3F4F6' };
+              const isExpanded = expandedId === creator.id;
+              const hasContent = creator.stage === 'content_submitted' && creator.contentSubmission;
 
-                return (
-                  <tr key={creator.id} style={styles.tbodyRow}>
-                    <td colSpan={5} style={{ padding: 0 }}>
-                      {/* Main row */}
-                      <div
-                        style={{ ...styles.mainRow, ...(isExpanded ? styles.mainRowExpanded : {}), cursor: hasContent ? 'pointer' : 'default' }}
-                        onClick={() => hasContent && setExpandedId(isExpanded ? null : creator.id)}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-                          <Avatar initials={creator.initials} size={34} photo={creator.photo} />
-                          <div>
-                            <div style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.3 }}>{creator.name}</div>
-                            <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
-                              {creator.handle}
-                              {creator.city ? ` · ${creator.city}` : ''}
-                              {creator.followers ? ` · ${formatFollowers(creator.followers)}` : ''}
-                            </div>
-                          </div>
-                        </div>
-
-                        <span style={{
-                          fontSize: 11, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
-                          color: stageInfo.color, background: stageInfo.bg, whiteSpace: 'nowrap', flexShrink: 0,
-                        }}>
-                          {stageInfo.label}
-                        </span>
-
-                        <span style={{ fontSize: 12, color: creator.isOverdue ? '#DC2626' : 'var(--color-text-tertiary)', fontWeight: creator.isOverdue ? 600 : 400, width: 50, textAlign: 'center', flexShrink: 0 }}>
-                          {creator.daysInStage}d
-                        </span>
-
-                        <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', width: 70, flexShrink: 0 }}>
-                          {creator.platform === 'both' ? 'IG + TT' : creator.platform === 'tiktok' ? 'TikTok' : 'Instagram'}
-                        </span>
-
-                        {hasContent ? (
-                          <ChevronRight size={16} style={{ color: 'var(--color-text-tertiary)', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 150ms', flexShrink: 0 }} />
-                        ) : (
-                          <div style={{ width: 16, flexShrink: 0 }} />
-                        )}
+              return (
+                <div key={creator.id} style={styles.row}>
+                  {/* Main row */}
+                  <div
+                    style={{ ...styles.mainRow, ...(isExpanded ? styles.mainRowExpanded : {}), cursor: hasContent ? 'pointer' : 'default' }}
+                    onClick={() => hasContent && setExpandedId(isExpanded ? null : creator.id)}
+                  >
+                    <Avatar initials={creator.initials} size={34} photo={creator.photo} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.3 }}>{creator.name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
+                        {creator.handle}
+                        {creator.followers ? ` · ${formatFollowers(creator.followers)}` : ''}
                       </div>
+                    </div>
 
-                      {/* Expanded content review panel */}
-                      {isExpanded && hasContent && (
+                    <span style={{
+                      fontSize: 11, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
+                      color: stageInfo.color, background: stageInfo.bg, whiteSpace: 'nowrap', flexShrink: 0,
+                    }}>
+                      {stageInfo.label}
+                    </span>
+
+                    <span style={{ fontSize: 12, color: creator.isOverdue ? '#DC2626' : 'var(--color-text-tertiary)', fontWeight: creator.isOverdue ? 600 : 400, width: 30, textAlign: 'center', flexShrink: 0 }}>
+                      {creator.daysInStage}d
+                    </span>
+
+                    {hasContent ? (
+                      <ChevronRight size={16} style={{ color: 'var(--color-text-tertiary)', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 150ms', flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 16, flexShrink: 0 }} />
+                    )}
+                  </div>
+
+                  {/* Expanded content review panel */}
+                  {isExpanded && hasContent && (
                         <div style={styles.expandedPanel}>
                           {/* Creator header */}
                           <div style={styles.reviewHeader}>
@@ -231,26 +213,6 @@ export default function Campaigns() {
                             </div>
                           </div>
 
-                          {/* AI suggestion cards */}
-                          <div style={styles.aiCardsRow}>
-                            <div style={styles.aiCard}>
-                              <div style={styles.aiCardHeader}>
-                                <FileText size={16} color="var(--color-text-secondary)" />
-                                <span style={{ flex: 1, fontWeight: 600, fontSize: 14 }}>What Creators Will Do</span>
-                                <span style={styles.aiTag}>AI SUGGESTED</span>
-                                <ChevronRight size={16} color="var(--color-text-tertiary)" />
-                              </div>
-                            </div>
-                            <div style={styles.aiCard}>
-                              <div style={styles.aiCardHeader}>
-                                <Shield size={16} color="var(--color-text-secondary)" />
-                                <span style={{ flex: 1, fontWeight: 600, fontSize: 14 }}>Brand Guidelines</span>
-                                <span style={styles.aiTag}>AI SUGGESTED</span>
-                                <ChevronRight size={16} color="var(--color-text-tertiary)" />
-                              </div>
-                            </div>
-                          </div>
-
                           {/* AI flagged notes */}
                           {creator.contentSubmission.aiNotes && (
                             <div style={styles.flaggedNote}>
@@ -278,12 +240,10 @@ export default function Campaigns() {
                           </div>
                         </div>
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
@@ -361,19 +321,7 @@ const styles = {
     whiteSpace: 'nowrap',
     border: '1px solid var(--color-border)',
   },
-  theadRow: {
-    borderBottom: '1px solid var(--color-border)',
-  },
-  th: {
-    padding: '10px 14px',
-    fontSize: 11,
-    fontWeight: 600,
-    color: 'var(--color-text-tertiary)',
-    textAlign: 'left',
-    letterSpacing: '0.5px',
-    whiteSpace: 'nowrap',
-  },
-  tbodyRow: {
+  row: {
     borderBottom: '1px solid var(--color-border)',
   },
   mainRow: {
@@ -433,32 +381,6 @@ const styles = {
     border: '1px solid var(--color-border)',
     borderRadius: 8,
     minHeight: 240,
-  },
-  aiCardsRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 16,
-    marginBottom: 20,
-  },
-  aiCard: {
-    background: 'var(--color-bg-card)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 8,
-    padding: 16,
-  },
-  aiCardHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-  },
-  aiTag: {
-    fontSize: 10,
-    fontWeight: 600,
-    color: 'var(--color-accent)',
-    background: 'var(--color-accent-light)',
-    padding: '2px 8px',
-    borderRadius: 4,
-    letterSpacing: '0.3px',
   },
   flaggedNote: {
     display: 'flex',
