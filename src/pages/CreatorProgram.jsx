@@ -291,14 +291,14 @@ export default function CreatorProgram() {
                     type="checkbox"
                     checked={selected.size === programCreators.length && programCreators.length > 0}
                     onChange={toggleAll}
-                    style={{ accentColor: '#7C3AED' }}
+                    style={{ accentColor: '#3B82F6' }}
                   />
                 </th>
                 <th style={styles.th}>CREATOR</th>
-                <th style={{ ...styles.th, width: 40 }}></th>
+                <th style={{ ...styles.th, width: 36, padding: '10px 2px' }}></th>
                 <th style={styles.th}>STATUS</th>
                 <th style={styles.th}>CAMPAIGN</th>
-                <th style={styles.th}>DAYS</th>
+                <th style={{ ...styles.th, textAlign: 'right', paddingRight: 4 }}>DAYS</th>
                 <th style={{ ...styles.th, textAlign: 'right' }}>DATE ADDED</th>
               </tr>
             </thead>
@@ -314,7 +314,7 @@ export default function CreatorProgram() {
                         type="checkbox"
                         checked={selected.has(creator.id)}
                         onChange={() => toggleSelect(creator.id)}
-                        style={{ accentColor: '#7C3AED' }}
+                        style={{ accentColor: '#3B82F6' }}
                       />
                     </td>
                     <td style={styles.td}>
@@ -329,7 +329,7 @@ export default function CreatorProgram() {
                         </div>
                       </div>
                     </td>
-                    <td style={{ ...styles.td, width: 40, padding: '10px 4px' }}>
+                    <td style={{ ...styles.td, width: 36, padding: '12px 2px' }}>
                       {creator.email ? (
                         <button
                           style={styles.emailBtn}
@@ -395,10 +395,10 @@ export default function CreatorProgram() {
                         </div>
                       )}
                     </td>
-                    <td style={{ ...styles.td, fontSize: 12, textAlign: 'center', color: creator.daysInStage > 2 ? '#DC2626' : 'var(--color-text-tertiary)', fontWeight: creator.daysInStage > 2 ? 600 : 400, whiteSpace: 'nowrap' }}>
+                    <td style={{ ...styles.td, fontSize: 12, textAlign: 'right', paddingRight: 4, color: creator.daysInStage > 2 ? '#DC2626' : '#94A3B8', fontWeight: creator.daysInStage > 2 ? 600 : 400, whiteSpace: 'nowrap' }}>
                       {creator.daysInStage != null ? `${creator.daysInStage}d` : '—'}
                     </td>
-                    <td style={{ ...styles.td, textAlign: 'right', fontSize: 12, color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' }}>
+                    <td style={{ ...styles.td, textAlign: 'right', fontSize: 12, color: '#94A3B8', whiteSpace: 'nowrap' }}>
                       {creator.dateAdded || '—'}
                     </td>
                   </tr>
@@ -498,21 +498,21 @@ export default function CreatorProgram() {
 const styles = {
   uploadTile: {
     padding: '20px 24px',
-    background: 'var(--color-bg-card)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-lg)',
-    marginBottom: 'var(--space-4)',
+    background: '#fff',
+    border: '1px solid #E2E8F0',
+    borderRadius: 12,
+    marginBottom: 16,
   },
   chooseFileBtn: {
-    padding: '6px 16px',
+    padding: '8px 20px',
     fontSize: 13,
     fontWeight: 500,
     fontFamily: 'inherit',
-    background: 'var(--color-bg-page)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-sm)',
+    background: '#F8FAFC',
+    border: '1px solid #E2E8F0',
+    borderRadius: 8,
     cursor: 'pointer',
-    color: 'var(--color-text-primary)',
+    color: '#334155',
   },
   addCreatorBtn: {
     display: 'flex',
@@ -522,16 +522,16 @@ const styles = {
     fontSize: 14,
     fontWeight: 600,
     fontFamily: 'inherit',
-    background: '#2196F3',
+    background: '#3B82F6',
     color: '#fff',
     border: 'none',
-    borderRadius: 4,
+    borderRadius: 8,
     cursor: 'pointer',
   },
   card: {
-    background: 'var(--color-bg-card)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-lg)',
+    background: '#fff',
+    border: '1px solid #E2E8F0',
+    borderRadius: 12,
     overflow: 'hidden',
   },
   filterBar: {
@@ -539,7 +539,8 @@ const styles = {
     alignItems: 'center',
     gap: 12,
     padding: '16px 20px',
-    borderBottom: '1px solid var(--color-border)',
+    borderBottom: '1px solid #E2E8F0',
+    background: '#FAFBFC',
   },
   searchWrap: {
     position: 'relative',
@@ -547,51 +548,55 @@ const styles = {
   },
   searchInput: {
     width: '100%',
-    padding: '8px 12px 8px 36px',
-    fontSize: 13,
+    padding: '9px 12px 9px 38px',
+    fontSize: 14,
     fontFamily: 'inherit',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-md)',
+    border: '1px solid #E2E8F0',
+    borderRadius: 8,
     outline: 'none',
-    background: 'var(--color-bg-page)',
+    background: '#fff',
+    color: '#334155',
   },
   filterSelect: {
-    height: 36,
+    height: 38,
     fontSize: 13,
-    padding: '4px 8px',
-    borderRadius: 'var(--radius-md)',
-    border: '1px solid var(--color-border)',
+    padding: '4px 12px',
+    borderRadius: 8,
+    border: '1px solid #E2E8F0',
     cursor: 'pointer',
     fontFamily: 'inherit',
-    background: 'var(--color-bg-card)',
+    background: '#fff',
+    color: '#334155',
   },
   countBadge: {
     fontSize: 13,
     fontWeight: 500,
-    padding: '6px 14px',
-    borderRadius: 'var(--radius-md)',
-    background: 'var(--color-bg-hover)',
-    color: 'var(--color-text-secondary)',
+    padding: '7px 16px',
+    borderRadius: 8,
+    background: '#F1F5F9',
+    color: '#64748B',
     whiteSpace: 'nowrap',
-    border: '1px solid var(--color-border)',
+    border: 'none',
   },
   theadRow: {
-    borderBottom: '1px solid var(--color-border)',
+    borderBottom: '1px solid #E2E8F0',
+    background: '#F8FAFC',
   },
   th: {
     padding: '10px 14px',
     fontSize: 11,
     fontWeight: 600,
-    color: 'var(--color-text-tertiary)',
+    color: '#94A3B8',
     textAlign: 'left',
     letterSpacing: '0.5px',
     whiteSpace: 'nowrap',
+    textTransform: 'uppercase',
   },
   tbodyRow: {
-    borderBottom: '1px solid var(--color-border)',
+    borderBottom: '1px solid #F1F5F9',
   },
   td: {
-    padding: '10px 14px',
+    padding: '12px 14px',
     verticalAlign: 'middle',
   },
   emailBtn: {
@@ -601,29 +606,30 @@ const styles = {
     width: 30,
     height: 30,
     borderRadius: 6,
-    border: '1px solid var(--color-border)',
-    background: 'var(--color-bg-page)',
+    border: '1px solid #E2E8F0',
+    background: '#F8FAFC',
     cursor: 'pointer',
-    color: 'var(--color-text-secondary)',
+    color: '#94A3B8',
     transition: 'background 150ms, color 150ms',
   },
   campaignTag: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 5,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 500,
-    padding: '2px 8px',
-    borderRadius: 3,
-    background: '#EDE9FE',
-    color: '#6D28D9',
+    padding: '3px 10px',
+    borderRadius: 6,
+    background: '#EFF6FF',
+    color: '#3B82F6',
     whiteSpace: 'nowrap',
+    textDecoration: 'none',
   },
   campaignRemove: {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    color: '#6D28D9',
+    color: '#93C5FD',
     fontSize: 14,
     fontWeight: 700,
     padding: '0 0 0 2px',
@@ -636,7 +642,7 @@ const styles = {
     alignItems: 'center',
     gap: 8,
     padding: 'var(--space-10)',
-    color: 'var(--color-text-secondary)',
+    color: '#94A3B8',
     fontSize: 14,
     textAlign: 'center',
   },
@@ -649,30 +655,31 @@ const styles = {
     alignItems: 'center',
     gap: 12,
     padding: '14px 24px',
-    background: '#1F2937',
+    background: '#1E293B',
     color: '#fff',
     fontSize: 14,
     zIndex: 900,
-    boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
+    boxShadow: '0 -4px 20px rgba(0,0,0,0.12)',
+    borderTop: '1px solid #334155',
   },
   bottomBtn: {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    padding: '7px 16px',
+    padding: '8px 16px',
     fontSize: 13,
     fontWeight: 600,
     fontFamily: 'inherit',
-    background: '#374151',
+    background: '#334155',
     color: '#fff',
     border: 'none',
-    borderRadius: 4,
+    borderRadius: 6,
     cursor: 'pointer',
   },
   bottomDivider: {
     width: 1,
     height: 24,
-    background: '#4B5563',
+    background: '#475569',
     flexShrink: 0,
   },
   // Modal styles
