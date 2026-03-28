@@ -198,7 +198,7 @@ export default function CreatorProgram() {
       if (!selected.has(c.id)) return c;
       const existing = c.campaignIds || (c.campaignId ? [c.campaignId] : []);
       if (existing.includes(assignCampaign)) return c;
-      return { ...c, campaignIds: [...existing, assignCampaign], campaignId: assignCampaign, stage: 'in_program', daysInStage: 0, isOverdue: false };
+      return { ...c, campaignIds: [...existing, assignCampaign], campaignId: assignCampaign };
     }));
     addToast(`${selected.size} creators assigned to ${camp?.brand || camp?.name}`);
     setSelected(new Set());
