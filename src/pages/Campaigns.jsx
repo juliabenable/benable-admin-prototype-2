@@ -189,7 +189,19 @@ export default function Campaigns() {
                   >
                     <Avatar initials={creator.initials} size={34} photo={creator.photo} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.3 }}>{creator.name}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.3 }}>{creator.name}</span>
+                        {creator.igUrl && (
+                          <a href={creator.igUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={styles.socialLink} title="Instagram">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="#E1306C" strokeWidth="2"/><circle cx="12" cy="12" r="5" stroke="#E1306C" strokeWidth="2"/><circle cx="18" cy="6" r="1.5" fill="#E1306C"/></svg>
+                          </a>
+                        )}
+                        {creator.tiktokUrl && (
+                          <a href={creator.tiktokUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={styles.socialLink} title="TikTok">
+                            <svg width="12" height="14" viewBox="0 0 14 16" fill="none"><path d="M10 0.5C10 2.71 11.79 4.5 14 4.5V7C12.17 7 10.5 6.26 9.25 5.1V11C9.25 13.76 7.01 16 4.25 16C1.49 16 -0.75 13.76 -0.75 11C-0.75 8.24 1.49 6 4.25 6V8.5C2.87 8.5 1.75 9.62 1.75 11C1.75 12.38 2.87 13.5 4.25 13.5C5.63 13.5 6.75 12.38 6.75 11V0.5H10Z" fill="#010101" transform="translate(0.5, 0)"/></svg>
+                          </a>
+                        )}
+                      </div>
                       <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
                         {creator.handle}
                         {creator.followers ? ` · ${formatFollowers(creator.followers)}` : ''}
@@ -386,6 +398,11 @@ const styles = {
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-lg)',
     overflow: 'hidden',
+  },
+  socialLink: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    opacity: 0.7,
   },
   contactBtn: {
     display: 'inline-flex',
