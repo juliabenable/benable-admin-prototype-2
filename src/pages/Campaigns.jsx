@@ -106,9 +106,46 @@ export default function Campaigns() {
         ))}
       </div>
 
-      {/* Combined card: filter bar + table */}
+      {/* Status filter pills */}
+      <div style={styles.pillRow}>
+        <button
+          style={{
+            ...styles.pill,
+            borderColor: statusFilter === 'all' ? '#6B7280' : 'var(--color-border)',
+            color: statusFilter === 'all' ? '#374151' : 'var(--color-text-tertiary)',
+            fontWeight: statusFilter === 'all' ? 600 : 400,
+          }}
+          onClick={() => setStatusFilter('all')}
+        >
+          All ({statusCounts.all || 0})
+        </button>
+        {CAMPAIGN_STAGES.map(s => {
+          const count = statusCounts[s.key] || 0;
+          if (count === 0) return null;
+          const isActive = statusFilter === s.key;
+          return (
+            <button
+              key={s.key}
+              style={{
+                ...styles.pill,
+                borderColor: isActive ? s.color : 'var(--color-border)',
+                borderLeftColor: s.color,
+                borderLeftWidth: 3,
+                color: isActive ? s.color : 'var(--color-text-secondary)',
+                fontWeight: isActive ? 600 : 400,
+                backgroundColor: isActive ? s.bg : 'var(--color-bg-card)',
+              }}
+              onClick={() => setStatusFilter(s.key)}
+            >
+              {s.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Combined card: search + table */}
       <div style={styles.card}>
-        {/* Filter bar */}
+        {/* Search bar */}
         <div style={styles.filterBar}>
           <div style={styles.searchWrap}>
             <Search size={16} color="#9CA3AF" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
@@ -120,14 +157,6 @@ export default function Campaigns() {
               style={styles.searchInput}
             />
           </div>
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={styles.filterSelect}>
-            <option value="all">All Status ({statusCounts.all || 0})</option>
-            {CAMPAIGN_STAGES.map(s => {
-              const count = statusCounts[s.key] || 0;
-              if (count === 0) return null;
-              return <option key={s.key} value={s.key}>{s.label} ({count})</option>;
-            })}
-          </select>
           <span style={styles.countBadge}>{campaignCreators.length} creators</span>
         </div>
 
@@ -304,6 +333,23 @@ const styles = {
   tabActive: { color: 'var(--color-accent)', borderBottomColor: 'var(--color-accent)', fontWeight: 600 },
   tabInactive: { color: 'var(--color-text-tertiary)' },
   tabLogo: { width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--color-border)' },
+  pillRow: {
+    display: 'flex',
+    gap: 8,
+    marginBottom: 'var(--space-4)',
+    flexWrap: 'wrap',
+  },
+  pill: {
+    padding: '6px 14px',
+    fontSize: 13,
+    fontFamily: 'inherit',
+    border: '1px solid var(--color-border)',
+    borderRadius: 8,
+    background: 'var(--color-bg-card)',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    transition: 'all 150ms',
+  },
   card: {
     background: 'var(--color-bg-card)',
     border: '1px solid var(--color-border)',
@@ -330,16 +376,6 @@ const styles = {
     borderRadius: 'var(--radius-md)',
     outline: 'none',
     background: 'var(--color-bg-page)',
-  },
-  filterSelect: {
-    height: 36,
-    fontSize: 13,
-    padding: '4px 8px',
-    borderRadius: 'var(--radius-md)',
-    border: '1px solid var(--color-border)',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    background: 'var(--color-bg-card)',
   },
   countBadge: {
     fontSize: 13,
