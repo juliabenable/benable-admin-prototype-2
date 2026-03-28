@@ -295,6 +295,7 @@ export default function CreatorProgram() {
                   />
                 </th>
                 <th style={styles.th}>CREATOR</th>
+                <th style={{ ...styles.th, width: 40 }}></th>
                 <th style={styles.th}>STATUS</th>
                 <th style={styles.th}>CAMPAIGN</th>
                 <th style={{ ...styles.th, textAlign: 'right' }}>DATE ADDED</th>
@@ -325,19 +326,23 @@ export default function CreatorProgram() {
                             {creator.followers ? ` · ${formatFollowers(creator.followers)}` : ''}
                           </div>
                         </div>
-                        {creator.email && (
-                          <button
-                            style={styles.emailBtn}
-                            title={creator.email}
-                            onClick={() => {
-                              navigator.clipboard.writeText(creator.email);
-                              addToast(`Copied ${creator.email}`);
-                            }}
-                          >
-                            <Mail size={14} />
-                          </button>
-                        )}
                       </div>
+                    </td>
+                    <td style={{ ...styles.td, width: 40, padding: '10px 4px' }}>
+                      {creator.email ? (
+                        <button
+                          style={styles.emailBtn}
+                          title={creator.email}
+                          onClick={() => {
+                            navigator.clipboard.writeText(creator.email);
+                            addToast(`Copied ${creator.email}`);
+                          }}
+                        >
+                          <Mail size={14} />
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>—</span>
+                      )}
                     </td>
                     <td style={styles.td}>
                       <select
