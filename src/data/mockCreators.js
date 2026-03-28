@@ -504,10 +504,19 @@ MOCK_CREATORS.forEach((c, i) => {
   const d = new Date('2026-03-27');
   d.setDate(d.getDate() - (i * 2) % 30);
   c.dateAdded = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  // Program-stage creators have no campaign by default
+  // Program-stage creators: some pre-assigned to campaigns for demo
   if (['not_in_program', 'invited_to_program', 'in_program'].includes(c.stage)) {
     c.campaignId = null;
-    c.campaignIds = [];
+    // Pre-assign some program-stage creators to campaigns for Draft Portal demo
+    const pikora = ['c1', 'c24', 'c6', 'c23', 'c25', 'c26']; // camp1
+    const litsea = ['c13', 'c12', 'c28', 'c27', 'c29']; // camp2
+    if (pikora.includes(c.id)) {
+      c.campaignIds = ['camp1'];
+    } else if (litsea.includes(c.id)) {
+      c.campaignIds = ['camp2'];
+    } else {
+      c.campaignIds = [];
+    }
   } else {
     c.campaignIds = c.campaignId ? [c.campaignId] : [];
   }
