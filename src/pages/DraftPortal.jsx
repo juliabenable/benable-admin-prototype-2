@@ -36,7 +36,8 @@ export default function DraftPortal() {
   const [portalOrders, setPortalOrders] = useState({});
   const [selectedPhotos, setSelectedPhotos] = useState({});
   const [expandedId, setExpandedId] = useState(null);
-  const [visibility, setVisibility] = useState({});
+  const [visibility, setVisibility] = useState({}); // default = invisible (must opt-in)
+  const [checkedIds, setCheckedIds] = useState(new Set());
   const [customReasons, setCustomReasons] = useState({});
   const [editingReasonIdx, setEditingReasonIdx] = useState(null); // { creatorId, index }
   const [editingReasonText, setEditingReasonText] = useState('');
@@ -69,16 +70,46 @@ export default function DraftPortal() {
     });
   }, [activeTab]);
 
-  // Visibility toggle
+  // Visibility toggle — default invisible, must opt-in
   const isVisible = useCallback((creatorId) => {
     const key = `${activeTab}-${creatorId}`;
-    return visibility[key] !== false;
+    return visibility[key] === true; // default invisible
   }, [visibility, activeTab]);
 
   const toggleVisibility = useCallback((creatorId) => {
     const key = `${activeTab}-${creatorId}`;
     setVisibility(prev => ({ ...prev, [key]: !isVisible(creatorId) }));
   }, [activeTab, isVisible]);
+
+  // Multi-select
+  const toggleChecked = useCallback((creatorId) => {
+    setCheckedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(creatorId)) next.delete(creatorId);
+      else next.add(creatorId);
+      return next;
+    });
+  }, []);
+
+  const toggleAllChecked = useCallback(() => {
+    const allIds = eligibleCreators.map(c => c.id);
+    if (checkedIds.size === allIds.length) {
+      setCheckedIds(new Set());
+    } else {
+      setCheckedIds(new Set(allIds));
+    }
+  }, [checkedIds, eligibleCreators]);
+
+  const bulkSetVisibility = useCallback((makeVisible) => {
+    setVisibility(prev => {
+      const next = { ...prev };
+      checkedIds.forEach(id => {
+        next[`${activeTab}-${id}`] = makeVisible;
+      });
+      return next;
+    });
+    setCheckedIds(new Set());
+  }, [checkedIds, activeTab]);
 
   // Reorder
   const moveCreator = useCallback((index, direction) => {
@@ -207,6 +238,15 @@ export default function DraftPortal() {
                   style={{ ...styles.mainRow, ...(isExpanded ? styles.mainRowExpanded : {}) }}
                   onClick={() => setExpandedId(isExpanded ? null : creator.id)}
                 >
+                  {/* Checkbox */}
+                  <input
+                    type="checkbox"
+                    checked={checkedIds.has(creator.id)}
+                    onChange={() => toggleChecked(creator.id)}
+                    onClick={e => e.stopPropagation()}
+                    style={styles.checkbox}
+                  />
+
                   {/* Expand arrow */}
                   <ChevronRight size={16} style={{ color: 'var(--color-text-tertiary)', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 150ms', flexShrink: 0 }} />
 
@@ -240,13 +280,14 @@ export default function DraftPortal() {
                     </span>
                   )}
 
-                  {/* Visibility toggle — text label */}
-                  <button
-                    style={{ ...styles.visBtn, color: visible ? '#22C55E' : 'var(--color-text-tertiary)' }}
+                  {/* Visibility toggle switch */}
+                  <div
                     onClick={e => { e.stopPropagation(); toggleVisibility(creator.id); }}
+                    style={{ ...styles.toggleTrack, background: visible ? '#22C55E' : '#D1D5DB' }}
+                    title={visible ? 'Visible to brand' : 'Hidden from brand'}
                   >
-                    {visible ? 'Visible to brand' : 'Invisible to brand'}
-                  </button>
+                    <div style={{ ...styles.toggleThumb, transform: visible ? 'translateX(16px)' : 'translateX(0)' }} />
+                  </div>
 
                   {/* Move buttons + order input — far right */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
@@ -417,6 +458,20 @@ export default function DraftPortal() {
           })}
         </div>
       )}
+
+      {/* Bulk action bar */}
+      {checkedIds.size > 0 && (
+        <div style={styles.bulkBar}>
+          <span style={{ fontSize: 13, color: '#fff' }}>{checkedIds.size} selected</span>
+          <button style={styles.bulkBtn} onClick={() => { setCheckedIds(new Set()); }}>Deselect All</button>
+          <button style={styles.bulkBtnGreen} onClick={() => bulkSetVisibility(true)}>
+            <EyeIcon size={14} /> Make Visible
+          </button>
+          <button style={styles.bulkBtnMuted} onClick={() => bulkSetVisibility(false)}>
+            Hide from Brand
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -500,17 +555,32 @@ const styles = {
     fontWeight: 600,
     flexShrink: 0,
   },
-  visBtn: {
-    background: 'none',
-    border: 'none',
+  checkbox: {
+    width: 16,
+    height: 16,
     cursor: 'pointer',
-    padding: '4px 8px',
     flexShrink: 0,
-    fontSize: 12,
-    fontWeight: 500,
-    fontFamily: 'inherit',
-    borderRadius: 4,
-    whiteSpace: 'nowrap',
+    accentColor: '#7C3AED',
+  },
+  toggleTrack: {
+    width: 36,
+    height: 20,
+    borderRadius: 10,
+    cursor: 'pointer',
+    flexShrink: 0,
+    position: 'relative',
+    transition: 'background 150ms',
+  },
+  toggleThumb: {
+    width: 16,
+    height: 16,
+    borderRadius: '50%',
+    background: '#fff',
+    position: 'absolute',
+    top: 2,
+    left: 2,
+    transition: 'transform 150ms',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
   },
   moveBtn: {
     background: 'none',
@@ -700,6 +770,56 @@ const styles = {
     color: '#fff',
     border: 'none',
     borderRadius: 4,
+    cursor: 'pointer',
+  },
+  bulkBar: {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    padding: '12px 24px',
+    background: '#1E1E2E',
+    zIndex: 100,
+    justifyContent: 'center',
+    boxShadow: '0 -2px 8px rgba(0,0,0,0.15)',
+  },
+  bulkBtn: {
+    background: 'none',
+    border: '1px solid rgba(255,255,255,0.3)',
+    color: '#fff',
+    padding: '6px 14px',
+    borderRadius: 6,
+    fontSize: 13,
+    fontWeight: 500,
+    fontFamily: 'inherit',
+    cursor: 'pointer',
+  },
+  bulkBtnGreen: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    background: '#22C55E',
+    border: 'none',
+    color: '#fff',
+    padding: '6px 14px',
+    borderRadius: 6,
+    fontSize: 13,
+    fontWeight: 600,
+    fontFamily: 'inherit',
+    cursor: 'pointer',
+  },
+  bulkBtnMuted: {
+    background: 'rgba(255,255,255,0.15)',
+    border: 'none',
+    color: '#fff',
+    padding: '6px 14px',
+    borderRadius: 6,
+    fontSize: 13,
+    fontWeight: 500,
+    fontFamily: 'inherit',
     cursor: 'pointer',
   },
 };
