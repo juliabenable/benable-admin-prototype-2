@@ -248,16 +248,16 @@ export default function DraftPortal() {
                     {visible ? 'Visible to brand' : 'Invisible to brand'}
                   </button>
 
-                  {/* Order input + move buttons — far right */}
+                  {/* Move buttons + order input — far right */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                    <button style={styles.moveBtn} onClick={() => moveCreator(index, -1)} disabled={index === 0}><ChevronUp size={14} /></button>
+                    <button style={styles.moveBtn} onClick={() => moveCreator(index, 1)} disabled={index === orderedCreators.length - 1}><ChevronDown size={14} /></button>
                     <input
                       type="text"
                       value={index + 1}
                       onChange={e => handleOrderInput(index, e.target.value)}
                       style={styles.orderInput}
                     />
-                    <button style={styles.moveBtn} onClick={() => moveCreator(index, -1)} disabled={index === 0}><ChevronUp size={14} /></button>
-                    <button style={styles.moveBtn} onClick={() => moveCreator(index, 1)} disabled={index === orderedCreators.length - 1}><ChevronDown size={14} /></button>
                   </div>
                 </div>
 
