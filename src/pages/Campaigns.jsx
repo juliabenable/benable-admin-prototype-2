@@ -5,17 +5,17 @@ import { formatFollowers } from '../utils/formatters';
 import { ChevronRight, X, Send, Check, Image, Sparkles, Search } from 'lucide-react';
 
 const CAMPAIGN_STAGES = [
-  { key: 'invited_to_campaign', label: 'Invited to Campaign', color: '#92400E', bg: '#FEF3C7' },
-  { key: 'accepted_campaign', label: 'Accepted Campaign', color: '#166534', bg: '#DCFCE7' },
-  { key: 'declined_campaign', label: 'Declined Campaign', color: '#991B1B', bg: '#FEE2E2' },
-  { key: 'products_chosen', label: 'Products Chosen', color: '#1E40AF', bg: '#DBEAFE' },
-  { key: 'products_ordered', label: 'Products Ordered', color: '#6D28D9', bg: '#EDE9FE' },
-  { key: 'products_received', label: 'Products Received', color: '#0E7490', bg: '#CFFAFE' },
-  { key: 'waiting_for_content', label: 'Waiting for Content', color: '#92400E', bg: '#FEF3C7' },
-  { key: 'content_submitted', label: 'Content Submitted', color: '#991B1B', bg: '#FEE2E2' },
-  { key: 'content_approved', label: 'Feedback Given', color: '#166534', bg: '#DCFCE7' },
-  { key: 'posted', label: 'Posted', color: '#0E7490', bg: '#CFFAFE' },
-  { key: 'completed', label: 'Completed', color: '#6B7280', bg: '#F3F4F6' },
+  { key: 'invited_to_campaign', label: 'Invited to Campaign', short: 'Invited', color: '#92400E', bg: '#FEF3C7' },
+  { key: 'accepted_campaign', label: 'Accepted Campaign', short: 'Accepted', color: '#166534', bg: '#DCFCE7' },
+  { key: 'declined_campaign', label: 'Declined Campaign', short: 'Declined', color: '#991B1B', bg: '#FEE2E2' },
+  { key: 'products_chosen', label: 'Products Chosen', short: 'Chosen', color: '#1E40AF', bg: '#DBEAFE' },
+  { key: 'products_ordered', label: 'Products Ordered', short: 'Ordered', color: '#6D28D9', bg: '#EDE9FE' },
+  { key: 'products_received', label: 'Products Received', short: 'Received', color: '#0E7490', bg: '#CFFAFE' },
+  { key: 'waiting_for_content', label: 'Waiting for Content', short: 'Waiting', color: '#92400E', bg: '#FEF3C7' },
+  { key: 'content_submitted', label: 'Content Submitted', short: 'Submitted', color: '#991B1B', bg: '#FEE2E2' },
+  { key: 'content_approved', label: 'Feedback Given', short: 'Feedback', color: '#166534', bg: '#DCFCE7' },
+  { key: 'posted', label: 'Posted', short: 'Posted', color: '#0E7490', bg: '#CFFAFE' },
+  { key: 'completed', label: 'Completed', short: 'Completed', color: '#6B7280', bg: '#F3F4F6' },
 ];
 
 const STAGE_MAP = Object.fromEntries(CAMPAIGN_STAGES.map(s => [s.key, s]));
@@ -137,7 +137,7 @@ export default function Campaigns() {
               }}
               onClick={() => setStatusFilter(s.key)}
             >
-              {s.label} ({count})
+              {s.short} ({count})
             </button>
           );
         })}
@@ -335,13 +335,14 @@ const styles = {
   tabLogo: { width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--color-border)' },
   pillRow: {
     display: 'flex',
-    gap: 8,
+    gap: 6,
     marginBottom: 'var(--space-4)',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
+    overflowX: 'auto',
   },
   pill: {
-    padding: '6px 14px',
-    fontSize: 13,
+    padding: '4px 10px',
+    fontSize: 11,
     fontFamily: 'inherit',
     border: '1px solid var(--color-border)',
     borderRadius: 8,
