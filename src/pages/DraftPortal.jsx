@@ -1,8 +1,23 @@
-import { useState, useCallback, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Check, Eye, EyeOff, ChevronRight, Plus, X, Sparkles } from 'lucide-react';
+import { useState, useCallback, useMemo, useRef } from 'react';
+import { ChevronUp, ChevronDown, Check, ChevronRight, Plus, X, Sparkles, Heart, MessageCircle, Share2, Bookmark, Eye as EyeIcon } from 'lucide-react';
 import { useAppState } from '../hooks/useAppState';
 import Avatar from '../components/Avatar';
 import { formatFollowers } from '../utils/formatters';
+
+// Format large numbers compactly
+function fmtNum(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(n);
+}
+
+// Platform label
+function platformLabel(post) {
+  if (post.platform === 'tiktok') return 'TikTok';
+  // For IG, differentiate reel vs post based on type or aspect ratio
+  if (post.type === 'reel' || post.type === 'video') return 'IG Reel';
+  return 'IG Post';
+}
 
 export default function DraftPortal() {
   const { creators, campaigns, addToast } = useAppState();
@@ -22,8 +37,9 @@ export default function DraftPortal() {
   const [selectedPhotos, setSelectedPhotos] = useState({});
   const [expandedId, setExpandedId] = useState(null);
   const [visibility, setVisibility] = useState({});
-  const [editingReasons, setEditingReasons] = useState({});
   const [customReasons, setCustomReasons] = useState({});
+  const [editingReasonIdx, setEditingReasonIdx] = useState(null); // { creatorId, index }
+  const [editingReasonText, setEditingReasonText] = useState('');
   const [newReason, setNewReason] = useState('');
 
   // Order management
@@ -36,7 +52,7 @@ export default function DraftPortal() {
     setPortalOrders(prev => ({ ...prev, [activeTab]: newOrder }));
   }, [activeTab]);
 
-  // Photo selection — ordered (first click = #1, second = #2, etc.)
+  // Photo selection — ordered
   const getPhotos = useCallback((creatorId) => {
     const key = `${activeTab}-${creatorId}`;
     return selectedPhotos[key] || [];
@@ -56,7 +72,7 @@ export default function DraftPortal() {
   // Visibility toggle
   const isVisible = useCallback((creatorId) => {
     const key = `${activeTab}-${creatorId}`;
-    return visibility[key] !== false; // default visible
+    return visibility[key] !== false;
   }, [visibility, activeTab]);
 
   const toggleVisibility = useCallback((creatorId) => {
@@ -91,6 +107,13 @@ export default function DraftPortal() {
     return creator?.aiMatchReasons || [];
   }, [customReasons, activeTab, creators]);
 
+  const updateReason = useCallback((creatorId, index, newText) => {
+    const key = `${activeTab}-${creatorId}`;
+    const current = [...getReasons(creatorId)];
+    current[index] = newText;
+    setCustomReasons(prev => ({ ...prev, [key]: current }));
+  }, [activeTab, getReasons]);
+
   const removeReason = useCallback((creatorId, index) => {
     const key = `${activeTab}-${creatorId}`;
     const current = [...getReasons(creatorId)];
@@ -106,6 +129,19 @@ export default function DraftPortal() {
     setCustomReasons(prev => ({ ...prev, [key]: current }));
     setNewReason('');
   }, [activeTab, getReasons, newReason]);
+
+  const startEditReason = (creatorId, index, text) => {
+    setEditingReasonIdx({ creatorId, index });
+    setEditingReasonText(text);
+  };
+
+  const saveEditReason = () => {
+    if (editingReasonIdx && editingReasonText.trim()) {
+      updateReason(editingReasonIdx.creatorId, editingReasonIdx.index, editingReasonText.trim());
+    }
+    setEditingReasonIdx(null);
+    setEditingReasonText('');
+  };
 
   const orderedCreators = getOrder().map(id => eligibleCreators.find(c => c.id === id)).filter(Boolean);
 
@@ -162,23 +198,15 @@ export default function DraftPortal() {
             const isExpanded = expandedId === creator.id;
             const reasons = getReasons(creator.id);
             const hasPhotos = selected.length > 0;
+            const demos = creator.demographics || {};
 
             return (
-              <div key={creator.id} style={{ ...styles.row, opacity: visible ? 1 : 0.5 }}>
+              <div key={creator.id} style={styles.row}>
                 {/* Main row */}
                 <div
-                  style={styles.mainRow}
+                  style={{ ...styles.mainRow, ...(isExpanded ? styles.mainRowExpanded : {}) }}
                   onClick={() => setExpandedId(isExpanded ? null : creator.id)}
                 >
-                  {/* Order number input */}
-                  <input
-                    type="text"
-                    value={index + 1}
-                    onClick={e => e.stopPropagation()}
-                    onChange={e => handleOrderInput(index, e.target.value)}
-                    style={styles.orderInput}
-                  />
-
                   {/* Expand arrow */}
                   <ChevronRight size={16} style={{ color: 'var(--color-text-tertiary)', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 150ms', flexShrink: 0 }} />
 
@@ -212,28 +240,33 @@ export default function DraftPortal() {
                     </span>
                   )}
 
-                  {/* Visibility toggle */}
+                  {/* Visibility toggle — text label */}
                   <button
-                    style={styles.visBtn}
+                    style={{ ...styles.visBtn, color: visible ? '#22C55E' : 'var(--color-text-tertiary)' }}
                     onClick={e => { e.stopPropagation(); toggleVisibility(creator.id); }}
-                    title={visible ? 'Hide from portal' : 'Show in portal'}
                   >
-                    {visible ? <Eye size={16} /> : <EyeOff size={16} />}
+                    {visible ? 'Visible to brand' : 'Invisible to brand'}
                   </button>
 
-                  {/* Move buttons */}
-                  <div style={{ display: 'flex', gap: 2 }} onClick={e => e.stopPropagation()}>
+                  {/* Order input + move buttons — far right */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                    <input
+                      type="text"
+                      value={index + 1}
+                      onChange={e => handleOrderInput(index, e.target.value)}
+                      style={styles.orderInput}
+                    />
                     <button style={styles.moveBtn} onClick={() => moveCreator(index, -1)} disabled={index === 0}><ChevronUp size={14} /></button>
                     <button style={styles.moveBtn} onClick={() => moveCreator(index, 1)} disabled={index === orderedCreators.length - 1}><ChevronDown size={14} /></button>
                   </div>
                 </div>
 
-                {/* Expanded panel */}
+                {/* Expanded drawer */}
                 {isExpanded && (
                   <div style={styles.expandedPanel}>
-                    <div style={styles.expandedGrid}>
+                    <div style={styles.drawerContent}>
                       {/* Left: Post tiles */}
-                      <div>
+                      <div style={styles.postsSection}>
                         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--color-text-secondary)' }}>
                           Select photos ({selected.length} selected)
                         </div>
@@ -254,9 +287,15 @@ export default function DraftPortal() {
                                 {isSelected && (
                                   <div style={styles.postBadge}>{selIndex + 1}</div>
                                 )}
-                                {/* Platform icon */}
-                                <div style={styles.platformIcon}>
-                                  {post.platform === 'tiktok' ? '▶' : '📷'}
+                                {/* Platform label */}
+                                <div style={styles.platformLabel}>
+                                  {platformLabel(post)}
+                                </div>
+                                {/* Stats overlay */}
+                                <div style={styles.statsOverlay}>
+                                  <span style={styles.statItem}><Heart size={10} fill="#fff" color="#fff" /> {fmtNum(post.likes)}</span>
+                                  <span style={styles.statItem}><MessageCircle size={10} fill="#fff" color="#fff" /> {fmtNum(post.comments)}</span>
+                                  {post.shares && <span style={styles.statItem}><Share2 size={10} color="#fff" /> {fmtNum(post.shares)}</span>}
                                 </div>
                               </div>
                             );
@@ -264,20 +303,93 @@ export default function DraftPortal() {
                         </div>
                       </div>
 
-                      {/* Right: AI reasons + info */}
-                      <div>
+                      {/* Right: Creator info card */}
+                      <div style={styles.infoSection}>
+                        {/* About me */}
+                        {creator.bio && (
+                          <div style={{ marginBottom: 16 }}>
+                            <div style={styles.sectionLabel}>About me</div>
+                            <div style={{ fontSize: 13, color: 'var(--color-text-primary)', lineHeight: 1.5 }}>{creator.bio}</div>
+                          </div>
+                        )}
+
+                        {/* Niche tags */}
+                        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+                          <span style={styles.nicheTag}>{creator.niche}</span>
+                        </div>
+
+                        {/* Social Stats */}
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={styles.sectionLabel}>Social Stats</div>
+                          <div style={styles.statsRow}>
+                            <div style={styles.statBox}>
+                              <div style={styles.statBoxLabel}>Followers</div>
+                              <div style={styles.statBoxValue}>{formatFollowers(creator.followers)}</div>
+                            </div>
+                            <div style={styles.statBox}>
+                              <div style={styles.statBoxLabel}>Engagement</div>
+                              <div style={styles.statBoxValue}>~{creator.engagement}%</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Audience */}
+                        {demos.location && (
+                          <div style={{ marginBottom: 16 }}>
+                            <div style={styles.sectionLabel}>Audience</div>
+                            <div style={styles.statsRow}>
+                              <div style={styles.statBox}>
+                                <div style={styles.statBoxLabel}>Location</div>
+                                <div style={styles.statBoxValue}>{demos.location}</div>
+                              </div>
+                              <div style={styles.statBox}>
+                                <div style={styles.statBoxLabel}>Gender</div>
+                                <div style={styles.statBoxValue}>{demos.gender}</div>
+                              </div>
+                              <div style={styles.statBox}>
+                                <div style={styles.statBoxLabel}>Age Range</div>
+                                <div style={styles.statBoxValue}>{demos.age}</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* AI Reasons — inline editable */}
                         <div style={styles.reasonsCard}>
                           <div style={styles.reasonsHeader}>
                             <Sparkles size={16} color="#7C3AED" />
                             <span style={{ fontWeight: 600, color: '#7C3AED' }}>Why they're perfect for this campaign</span>
                           </div>
-                          {reasons.map((reason, ri) => (
-                            <div key={ri} style={styles.reasonRow}>
-                              <Check size={14} color="#7C3AED" style={{ flexShrink: 0, marginTop: 1 }} />
-                              <span style={{ flex: 1, fontSize: 13 }}>{reason}</span>
-                              <button style={styles.reasonRemove} onClick={() => removeReason(creator.id, ri)}>×</button>
-                            </div>
-                          ))}
+                          {reasons.map((reason, ri) => {
+                            const isEditingThis = editingReasonIdx?.creatorId === creator.id && editingReasonIdx?.index === ri;
+                            return (
+                              <div key={ri} style={styles.reasonRow}>
+                                <Check size={14} color="#7C3AED" style={{ flexShrink: 0, marginTop: 3 }} />
+                                {isEditingThis ? (
+                                  <input
+                                    autoFocus
+                                    type="text"
+                                    value={editingReasonText}
+                                    onChange={e => setEditingReasonText(e.target.value)}
+                                    onBlur={saveEditReason}
+                                    onKeyDown={e => { if (e.key === 'Enter') saveEditReason(); if (e.key === 'Escape') setEditingReasonIdx(null); }}
+                                    style={styles.reasonEditInput}
+                                  />
+                                ) : (
+                                  <span
+                                    style={{ flex: 1, fontSize: 13, cursor: 'text', padding: '2px 0', borderBottom: '1px dashed transparent' }}
+                                    onClick={e => { e.stopPropagation(); startEditReason(creator.id, ri, reason); }}
+                                    onMouseEnter={e => e.currentTarget.style.borderBottomColor = '#D4CCF0'}
+                                    onMouseLeave={e => e.currentTarget.style.borderBottomColor = 'transparent'}
+                                    title="Click to edit"
+                                  >
+                                    {reason}
+                                  </span>
+                                )}
+                                <button style={styles.reasonRemove} onClick={() => removeReason(creator.id, ri)}>×</button>
+                              </div>
+                            );
+                          })}
                           <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                             <input
                               type="text"
@@ -294,22 +406,6 @@ export default function DraftPortal() {
                             >
                               <Plus size={14} /> Add
                             </button>
-                          </div>
-                        </div>
-
-                        {/* Social stats */}
-                        <div style={styles.statsRow}>
-                          <div style={styles.statBox}>
-                            <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>Followers</div>
-                            <div style={{ fontSize: 18, fontWeight: 700 }}>{formatFollowers(creator.followers)}</div>
-                          </div>
-                          <div style={styles.statBox}>
-                            <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>Engagement</div>
-                            <div style={{ fontSize: 18, fontWeight: 700 }}>{creator.engagement}%</div>
-                          </div>
-                          <div style={styles.statBox}>
-                            <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>Niche</div>
-                            <div style={{ fontSize: 14, fontWeight: 600 }}>{creator.niche}</div>
                           </div>
                         </div>
                       </div>
@@ -370,6 +466,10 @@ const styles = {
     padding: '10px 12px',
     cursor: 'pointer',
   },
+  mainRowExpanded: {
+    background: '#F8F6FF',
+    borderBottom: 'none',
+  },
   orderInput: {
     width: 32,
     height: 28,
@@ -382,7 +482,6 @@ const styles = {
     outline: 'none',
     color: 'var(--color-accent)',
     background: 'var(--color-bg-page)',
-    flexShrink: 0,
   },
   socialLink: {
     display: 'inline-flex',
@@ -405,9 +504,13 @@ const styles = {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    color: 'var(--color-text-tertiary)',
-    padding: 4,
+    padding: '4px 8px',
     flexShrink: 0,
+    fontSize: 12,
+    fontWeight: 500,
+    fontFamily: 'inherit',
+    borderRadius: 4,
+    whiteSpace: 'nowrap',
   },
   moveBtn: {
     background: 'none',
@@ -420,16 +523,19 @@ const styles = {
     alignItems: 'center',
   },
   expandedPanel: {
-    padding: '0 12px 16px 54px',
-    borderTop: '1px solid var(--color-border)',
+    borderLeft: '3px solid #7C3AED',
+    marginLeft: 12,
     background: '#FAFAFA',
+    borderBottom: '1px solid var(--color-border)',
   },
-  expandedGrid: {
+  drawerContent: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
-    gap: 20,
-    paddingTop: 16,
+    gap: 24,
+    padding: '16px 16px 16px 20px',
   },
+  postsSection: {},
+  infoSection: {},
   postGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
@@ -463,22 +569,81 @@ const styles = {
     fontSize: 11,
     fontWeight: 700,
   },
-  platformIcon: {
+  platformLabel: {
     position: 'absolute',
-    bottom: 4,
-    left: 4,
-    fontSize: 12,
-    background: 'rgba(255,255,255,0.85)',
-    borderRadius: 4,
-    padding: '1px 4px',
+    top: 5,
+    left: 5,
+    fontSize: 9,
+    fontWeight: 600,
+    background: 'rgba(0,0,0,0.6)',
+    color: '#fff',
+    borderRadius: 3,
+    padding: '2px 5px',
     lineHeight: 1,
+    letterSpacing: '0.2px',
+  },
+  statsOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    display: 'flex',
+    gap: 6,
+    padding: '16px 5px 4px',
+    background: 'linear-gradient(transparent, rgba(0,0,0,0.55))',
+    justifyContent: 'center',
+  },
+  statItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 2,
+    fontSize: 9,
+    color: '#fff',
+    fontWeight: 600,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: 'var(--color-text-secondary)',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: '0.3px',
+  },
+  nicheTag: {
+    fontSize: 12,
+    fontWeight: 500,
+    color: 'var(--color-text-secondary)',
+    padding: '4px 10px',
+    background: 'var(--color-bg-page)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 20,
+  },
+  statsRow: {
+    display: 'flex',
+    gap: 8,
+  },
+  statBox: {
+    flex: 1,
+    padding: '8px 12px',
+    background: 'var(--color-bg-card)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 6,
+  },
+  statBoxLabel: {
+    fontSize: 11,
+    color: 'var(--color-text-tertiary)',
+    marginBottom: 2,
+  },
+  statBoxValue: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: 'var(--color-text-primary)',
   },
   reasonsCard: {
     padding: 16,
     background: '#F3F0FF',
     borderRadius: 8,
     border: '1px solid #E9E3FF',
-    marginBottom: 12,
   },
   reasonsHeader: {
     display: 'flex',
@@ -503,6 +668,16 @@ const styles = {
     lineHeight: 1,
     flexShrink: 0,
   },
+  reasonEditInput: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: 'inherit',
+    padding: '2px 6px',
+    border: '1px solid #7C3AED',
+    borderRadius: 4,
+    outline: 'none',
+    background: '#fff',
+  },
   reasonInput: {
     flex: 1,
     padding: '4px 8px',
@@ -526,16 +701,5 @@ const styles = {
     border: 'none',
     borderRadius: 4,
     cursor: 'pointer',
-  },
-  statsRow: {
-    display: 'flex',
-    gap: 8,
-  },
-  statBox: {
-    flex: 1,
-    padding: '10px 12px',
-    background: 'var(--color-bg-card)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 6,
   },
 };
