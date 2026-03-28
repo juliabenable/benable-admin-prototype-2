@@ -298,6 +298,7 @@ export default function CreatorProgram() {
                 <th style={{ ...styles.th, width: 40 }}></th>
                 <th style={styles.th}>STATUS</th>
                 <th style={styles.th}>CAMPAIGN</th>
+                <th style={styles.th}>DAYS</th>
                 <th style={{ ...styles.th, textAlign: 'right' }}>DATE ADDED</th>
               </tr>
             </thead>
@@ -393,6 +394,9 @@ export default function CreatorProgram() {
                           })}
                         </div>
                       )}
+                    </td>
+                    <td style={{ ...styles.td, fontSize: 12, textAlign: 'center', color: creator.daysInStage > 2 ? '#DC2626' : 'var(--color-text-tertiary)', fontWeight: creator.daysInStage > 2 ? 600 : 400, whiteSpace: 'nowrap' }}>
+                      {creator.daysInStage != null ? `${creator.daysInStage}d` : '—'}
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right', fontSize: 12, color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' }}>
                       {creator.dateAdded || '—'}
