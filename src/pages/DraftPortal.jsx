@@ -25,11 +25,13 @@ export default function DraftPortal() {
   const [activeTab, setActiveTab] = useState(liveCampaigns[0]?.id || '');
   const activeCampaign = campaigns.find(c => c.id === activeTab);
 
-  // Creators in program AND assigned to this campaign
+  // Creators in program AND assigned to this campaign, OR invited to this campaign
   const eligibleCreators = useMemo(() => {
     return creators.filter(c => {
       const campaignIds = c.campaignIds || (c.campaignId ? [c.campaignId] : []);
-      return campaignIds.includes(activeTab) && ['in_program', 'invited_to_program', 'not_in_program'].includes(c.stage);
+      const inProgram = campaignIds.includes(activeTab) && ['in_program', 'invited_to_program', 'not_in_program'].includes(c.stage);
+      const invitedToCampaign = c.campaignId === activeTab && c.stage === 'invited_to_campaign';
+      return inProgram || invitedToCampaign;
     });
   }, [creators, activeTab]);
 
@@ -297,6 +299,11 @@ export default function DraftPortal() {
                       {creator.handle} · {formatFollowers(creator.followers)}
                     </div>
                   </div>
+
+                  {/* Invited badge */}
+                  {creator.stage === 'invited_to_campaign' && (
+                    <span style={styles.invitedBadge}>Invited</span>
+                  )}
 
                   {/* Photo check indicator */}
                   {hasPhotos && (
@@ -605,6 +612,16 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     opacity: 0.7,
+  },
+  invitedBadge: {
+    fontSize: 11,
+    fontWeight: 500,
+    padding: '3px 8px',
+    borderRadius: 4,
+    color: '#92400E',
+    backgroundColor: '#FEF3C7',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
   },
   photoCheck: {
     display: 'flex',
