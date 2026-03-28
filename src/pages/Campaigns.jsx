@@ -120,7 +120,6 @@ export default function Campaigns() {
         </button>
         {CAMPAIGN_STAGES.map(s => {
           const count = statusCounts[s.key] || 0;
-          if (count === 0) return null;
           const isActive = statusFilter === s.key;
           return (
             <button
@@ -133,6 +132,7 @@ export default function Campaigns() {
                 backgroundColor: s.bg,
                 fontWeight: isActive ? 700 : 500,
                 boxShadow: isActive ? `0 0 0 1px ${s.color}` : 'none',
+                opacity: count === 0 ? 0.45 : 1,
               }}
               onClick={() => setStatusFilter(s.key)}
             >
