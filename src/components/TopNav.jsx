@@ -2,8 +2,8 @@ import { NavLink } from 'react-router-dom';
 import { Folders, Eye, FileSpreadsheet, LayoutList, Users } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { to: '/admin/draft-portal', label: 'Draft Portal', icon: LayoutList },
   { to: '/admin/creator-program', label: 'Creator Program', icon: Users },
+  { to: '/admin/draft-portal', label: 'Draft Portal', icon: LayoutList },
   { to: '/admin/campaigns', label: 'Campaigns', icon: Folders, end: false },
   { to: '/admin/review', label: 'Review Queue', icon: Eye },
   { to: '/admin/spreadsheet', label: 'Spreadsheet', icon: FileSpreadsheet },
