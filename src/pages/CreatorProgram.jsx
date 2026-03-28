@@ -295,9 +295,6 @@ export default function CreatorProgram() {
                   />
                 </th>
                 <th style={styles.th}>CREATOR</th>
-                <th style={styles.th}>EMAIL</th>
-                <th style={styles.th}>PLATFORM</th>
-                <th style={styles.th}>FOLLOWERS</th>
                 <th style={styles.th}>STATUS</th>
                 <th style={styles.th}>CAMPAIGN</th>
                 <th style={{ ...styles.th, textAlign: 'right' }}>DATE ADDED</th>
@@ -323,33 +320,24 @@ export default function CreatorProgram() {
                         <Avatar initials={creator.initials} size={34} photo={creator.photo} />
                         <div>
                           <div style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.3 }}>{creator.name}</div>
-                          <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>{creator.handle}</div>
+                          <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
+                            {creator.handle}
+                            {creator.followers ? ` · ${formatFollowers(creator.followers)}` : ''}
+                          </div>
                         </div>
+                        {creator.email && (
+                          <button
+                            style={styles.emailBtn}
+                            title={creator.email}
+                            onClick={() => {
+                              navigator.clipboard.writeText(creator.email);
+                              addToast(`Copied ${creator.email}`);
+                            }}
+                          >
+                            <Mail size={14} />
+                          </button>
+                        )}
                       </div>
-                    </td>
-                    <td style={styles.td}>
-                      {creator.email ? (
-                        <button
-                          style={styles.emailBtn}
-                          title={creator.email}
-                          onClick={() => {
-                            navigator.clipboard.writeText(creator.email);
-                            addToast(`Copied ${creator.email}`);
-                          }}
-                        >
-                          <Mail size={14} />
-                        </button>
-                      ) : (
-                        <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>—</span>
-                      )}
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                        {platInfo.icon} {platInfo.label}
-                      </span>
-                    </td>
-                    <td style={{ ...styles.td, fontSize: 13, fontWeight: 600 }}>
-                      {creator.followers ? formatFollowers(creator.followers) : '—'}
                     </td>
                     <td style={styles.td}>
                       <select
