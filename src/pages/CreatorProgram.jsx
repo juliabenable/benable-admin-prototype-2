@@ -320,24 +320,26 @@ export default function CreatorProgram() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Avatar initials={creator.initials} size={34} photo={creator.photo} />
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.3 }}>{creator.name}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.3 }}>{creator.name}</span>
+                            {creator.email && (
+                              <button
+                                style={styles.emailBtn}
+                                title={creator.email}
+                                onClick={() => {
+                                  navigator.clipboard.writeText(creator.email);
+                                  addToast(`Copied ${creator.email}`);
+                                }}
+                              >
+                                <Mail size={12} />
+                              </button>
+                            )}
+                          </div>
                           <div style={{ fontSize: 12, color: '#94A3B8' }}>
                             {creator.handle}
                             {creator.followers ? ` · ${formatFollowers(creator.followers)}` : ''}
                           </div>
                         </div>
-                        {creator.email && (
-                          <button
-                            style={styles.emailBtn}
-                            title={creator.email}
-                            onClick={() => {
-                              navigator.clipboard.writeText(creator.email);
-                              addToast(`Copied ${creator.email}`);
-                            }}
-                          >
-                            <Mail size={14} />
-                          </button>
-                        )}
                       </div>
                     </td>
                     <td style={styles.td}>
@@ -595,17 +597,19 @@ const styles = {
     verticalAlign: 'middle',
   },
   emailBtn: {
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 30,
-    height: 30,
-    borderRadius: 6,
-    border: '1px solid #E2E8F0',
-    background: '#F8FAFC',
+    width: 18,
+    height: 18,
+    padding: 0,
+    border: 'none',
+    background: 'transparent',
     cursor: 'pointer',
     color: '#94A3B8',
-    transition: 'background 150ms, color 150ms',
+    borderRadius: 3,
+    transition: 'color 150ms',
+    flexShrink: 0,
   },
   campaignTag: {
     display: 'inline-flex',

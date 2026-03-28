@@ -20,7 +20,7 @@ function platformLabel(post) {
 }
 
 export default function DraftPortal() {
-  const { creators, campaigns, addToast } = useAppState();
+  const { creators, setCreators, campaigns, addToast } = useAppState();
   const liveCampaigns = campaigns.filter(c => c.status === 'live');
   const [activeTab, setActiveTab] = useState(liveCampaigns[0]?.id || '');
   const activeCampaign = campaigns.find(c => c.id === activeTab);
@@ -74,11 +74,14 @@ export default function DraftPortal() {
     });
   }, [activeTab]);
 
-  // Visibility toggle — default invisible, must opt-in
+  // Visibility toggle — default invisible, must opt-in (invited creators default visible)
   const isVisible = useCallback((creatorId) => {
     const key = `${activeTab}-${creatorId}`;
-    return visibility[key] === true; // default invisible
-  }, [visibility, activeTab]);
+    if (visibility[key] !== undefined) return visibility[key];
+    // Invited creators are visible by default
+    const creator = creators.find(c => c.id === creatorId);
+    return creator?.stage === 'invited_to_campaign';
+  }, [visibility, activeTab, creators]);
 
   const toggleVisibility = useCallback((creatorId) => {
     const key = `${activeTab}-${creatorId}`;
@@ -190,6 +193,23 @@ export default function DraftPortal() {
     return list;
   }, [allOrderedCreators, searchQuery, visFilter, isVisible]);
 
+  const removeFromCampaign = useCallback((creatorId) => {
+    const creator = creators.find(c => c.id === creatorId);
+    setCreators(prev => prev.map(c => {
+      if (c.id !== creatorId) return c;
+      // Remove this campaign from campaignIds, reset stage back to program stage
+      const campaignIds = (c.campaignIds || []).filter(id => id !== activeTab);
+      return {
+        ...c,
+        campaignId: c.campaignId === activeTab ? null : c.campaignId,
+        campaignIds,
+        stage: c.stage === 'invited_to_campaign' ? 'in_program' : c.stage,
+      };
+    }));
+    setExpandedId(null);
+    addToast(`${creator?.name} removed from ${activeCampaign?.brand || activeCampaign?.name}`);
+  }, [creators, setCreators, activeTab, activeCampaign, addToast]);
+
   const handleSave = () => {
     addToast(`Portal draft saved for ${activeCampaign?.brand || activeCampaign?.name}. ${orderedCreators.length} creators.`);
   };
@@ -243,6 +263,17 @@ export default function DraftPortal() {
           <option value="hidden">Hidden from brand</option>
         </select>
         <span style={styles.countLabel}>{orderedCreators.length} creators</span>
+      </div>
+
+      {/* Column headers */}
+      <div style={styles.columnHeader}>
+        <div style={{ width: 18, flexShrink: 0 }} />
+        <div style={{ width: 40, flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>Creator</div>
+        <div style={{ width: 60, flexShrink: 0, textAlign: 'center' }}>Photos</div>
+        <div style={{ width: 50, flexShrink: 0, textAlign: 'center' }}>Visible</div>
+        <div style={{ width: 40, flexShrink: 0, textAlign: 'center' }}>Order</div>
+        <div style={{ width: 18, flexShrink: 0 }} />
       </div>
 
       {orderedCreators.length === 0 ? (
@@ -304,6 +335,15 @@ export default function DraftPortal() {
                   {creator.stage === 'invited_to_campaign' && (
                     <span style={styles.invitedBadge}>Invited</span>
                   )}
+
+                  {/* Remove from campaign */}
+                  <button
+                    style={styles.removeBtn}
+                    title="Remove from campaign"
+                    onClick={e => { e.stopPropagation(); removeFromCampaign(creator.id); }}
+                  >
+                    <X size={14} />
+                  </button>
 
                   {/* Photo check indicator */}
                   {hasPhotos && (
@@ -537,6 +577,19 @@ const styles = {
   tabActive: { color: 'var(--color-accent)', borderBottomColor: 'var(--color-accent)', fontWeight: 600 },
   tabInactive: { color: 'var(--color-text-tertiary)' },
   tabLogo: { width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--color-border)' },
+  columnHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '8px 12px',
+    background: 'var(--color-bg-sidebar)',
+    borderBottom: '1px solid var(--color-border)',
+    fontSize: 11,
+    fontWeight: 500,
+    color: 'var(--color-text-secondary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+  },
   headerBar: {
     display: 'flex',
     alignItems: 'center',
@@ -612,6 +665,21 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     opacity: 0.7,
+  },
+  removeBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 24,
+    height: 24,
+    padding: 0,
+    border: '1px solid var(--color-border)',
+    background: 'var(--color-bg-page)',
+    cursor: 'pointer',
+    color: '#94A3B8',
+    borderRadius: 5,
+    flexShrink: 0,
+    transition: 'color 150ms, background 150ms, border-color 150ms',
   },
   invitedBadge: {
     fontSize: 11,

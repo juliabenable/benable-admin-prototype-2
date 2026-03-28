@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useAppState } from '../hooks/useAppState';
 import Avatar from '../components/Avatar';
 import { formatFollowers } from '../utils/formatters';
-import { ChevronRight, X, Send, Check, Image, Sparkles, Search } from 'lucide-react';
+import { ChevronRight, X, Send, Check, Image, Sparkles, Search, Mail, Phone } from 'lucide-react';
 
 const CAMPAIGN_STAGES = [
   { key: 'invited_to_campaign', label: 'Invited', color: '#92400E', bg: '#FEF3C7' },
@@ -158,6 +158,16 @@ export default function Campaigns() {
           <span style={styles.countBadge}>{campaignCreators.length} creators</span>
         </div>
 
+        {/* Column headers */}
+        <div style={styles.columnHeader}>
+          <div style={{ width: 34, flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>Creator</div>
+          <div style={{ width: 70, flexShrink: 0, textAlign: 'center' }}>Contact</div>
+          <div style={{ width: 140, flexShrink: 0 }}>Status</div>
+          <div style={{ width: 30, flexShrink: 0, textAlign: 'center' }}>Days</div>
+          <div style={{ width: 16, flexShrink: 0 }} />
+        </div>
+
         {/* Rows */}
         {campaignCreators.length === 0 ? (
           <div style={styles.emptyState}>
@@ -184,6 +194,28 @@ export default function Campaigns() {
                         {creator.handle}
                         {creator.followers ? ` · ${formatFollowers(creator.followers)}` : ''}
                       </div>
+                    </div>
+
+                    {/* Contact icons */}
+                    <div style={{ width: 70, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      {creator.email && (
+                        <button
+                          style={styles.contactBtn}
+                          title={creator.email}
+                          onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(creator.email); addToast(`Copied ${creator.email}`); }}
+                        >
+                          <Mail size={13} />
+                        </button>
+                      )}
+                      {creator.phone && (
+                        <button
+                          style={styles.contactBtn}
+                          title={creator.phone}
+                          onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(creator.phone); addToast(`Copied ${creator.phone}`); }}
+                        >
+                          <Phone size={13} />
+                        </button>
+                      )}
                     </div>
 
                     <select
@@ -354,6 +386,33 @@ const styles = {
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-lg)',
     overflow: 'hidden',
+  },
+  contactBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 26,
+    height: 26,
+    padding: 0,
+    border: '1px solid var(--color-border)',
+    background: 'var(--color-bg-page)',
+    cursor: 'pointer',
+    color: '#94A3B8',
+    borderRadius: 5,
+    transition: 'color 150ms, background 150ms',
+  },
+  columnHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    padding: '8px 14px',
+    background: 'var(--color-bg-sidebar)',
+    borderBottom: '1px solid var(--color-border)',
+    fontSize: 11,
+    fontWeight: 500,
+    color: 'var(--color-text-secondary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
   },
   filterBar: {
     display: 'flex',
