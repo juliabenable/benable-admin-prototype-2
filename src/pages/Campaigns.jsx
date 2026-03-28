@@ -12,7 +12,7 @@ const CAMPAIGN_STAGES = [
   { key: 'products_ordered', label: 'Products Ordered', color: '#6D28D9', bg: '#EDE9FE' },
   { key: 'products_received', label: 'Products Received', color: '#0E7490', bg: '#CFFAFE' },
   { key: 'waiting_for_content', label: 'Waiting for Content', color: '#92400E', bg: '#FEF3C7' },
-  { key: 'content_submitted', label: 'Content Submitted', color: '#1E40AF', bg: '#DBEAFE' },
+  { key: 'content_submitted', label: 'Content Submitted', color: '#991B1B', bg: '#FEE2E2' },
   { key: 'content_approved', label: 'Feedback Given', color: '#166534', bg: '#DCFCE7' },
   { key: 'posted', label: 'Posted', color: '#0E7490', bg: '#CFFAFE' },
   { key: 'completed', label: 'Completed', color: '#6B7280', bg: '#F3F4F6' },
@@ -22,7 +22,7 @@ const STAGE_MAP = Object.fromEntries(CAMPAIGN_STAGES.map(s => [s.key, s]));
 const PROGRAM_STAGES = ['not_in_program', 'invited_to_program', 'in_program'];
 
 export default function Campaigns() {
-  const { creators, campaigns, addToast } = useAppState();
+  const { creators, setCreators, campaigns, addToast } = useAppState();
   const liveCampaigns = campaigns.filter(c => c.status === 'live');
   const [activeTab, setActiveTab] = useState(liveCampaigns[0]?.id || '');
   const activeCampaign = campaigns.find(c => c.id === activeTab);
@@ -60,6 +60,15 @@ export default function Campaigns() {
     allForCampaign.forEach(c => { counts[c.stage] = (counts[c.stage] || 0) + 1; });
     return counts;
   }, [allForCampaign]);
+
+  const changeStage = (creatorId, newStage) => {
+    const label = STAGE_MAP[newStage]?.label || newStage;
+    setCreators(prev => prev.map(c =>
+      c.id === creatorId ? { ...c, stage: newStage, daysInStage: 0, isOverdue: false } : c
+    ));
+    const creator = creators.find(c => c.id === creatorId);
+    addToast(`${creator?.name} → ${label}`);
+  };
 
   const handleApprove = (creatorId) => {
     addToast('Content approved');
@@ -150,12 +159,33 @@ export default function Campaigns() {
                       </div>
                     </div>
 
-                    <span style={{
-                      fontSize: 11, fontWeight: 500, padding: '3px 8px', borderRadius: 4,
-                      color: stageInfo.color, background: stageInfo.bg, whiteSpace: 'nowrap', flexShrink: 0,
-                    }}>
-                      {stageInfo.label}
-                    </span>
+                    <select
+                      value={creator.stage}
+                      onChange={e => { e.stopPropagation(); changeStage(creator.id, e.target.value); }}
+                      onClick={e => e.stopPropagation()}
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        padding: '3px 6px',
+                        borderRadius: 4,
+                        color: stageInfo.color,
+                        background: stageInfo.bg,
+                        border: `1px solid ${stageInfo.bg}`,
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                        appearance: 'none',
+                        WebkitAppearance: 'none',
+                        paddingRight: 18,
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='${encodeURIComponent(stageInfo.color)}' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 4px center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {CAMPAIGN_STAGES.map(s => (
+                        <option key={s.key} value={s.key}>{s.label}</option>
+                      ))}
+                    </select>
 
                     <span style={{ fontSize: 12, color: creator.isOverdue ? '#DC2626' : 'var(--color-text-tertiary)', fontWeight: creator.isOverdue ? 600 : 400, width: 30, textAlign: 'center', flexShrink: 0 }}>
                       {creator.daysInStage}d
