@@ -70,7 +70,7 @@ export const MOCK_CREATORS = [
   {
     id: 'c2', name: 'Jade Rivera', handle: '@jadeathome', niche: 'Home',
     followers: 8100, engagement: 5.1, avgViews: 12000, avgLikes: 1500,
-    campaignId: 'camp1', stage: 'products_received', daysInStage: 1, isOverdue: false,
+    campaignId: 'camp1', stage: 'awaiting_content', daysInStage: 1, isOverdue: false,
     photo: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop&crop=face', initials: 'JR', city: 'Austin, TX',
     bio: 'Home decor & cooking. Making everyday living beautiful.',
     email: 'jade@jadeathome.com', phone: null,
@@ -138,7 +138,7 @@ export const MOCK_CREATORS = [
   {
     id: 'c7', name: 'Chris Lee', handle: '@chrislife', niche: 'Lifestyle',
     followers: 11300, engagement: 4.8, avgViews: 16000, avgLikes: 2200,
-    campaignId: 'camp1', stage: 'waiting_for_content', daysInStage: 4, isOverdue: true,
+    campaignId: 'camp1', stage: 'awaiting_content', daysInStage: 4, isOverdue: true,
     photo: 'https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=200&h=200&fit=crop&crop=face', initials: 'CL', city: 'Denver, CO',
     bio: 'Lifestyle content creator. Fitness, food, and everyday living.',
     email: 'chris@chrislife.com', phone: '(720) 555-0234',
@@ -235,7 +235,7 @@ export const MOCK_CREATORS = [
   {
     id: 'c14', name: 'Maya Anderson', handle: '@mayabeauty', niche: 'Beauty',
     followers: 17200, engagement: 4.0, avgViews: 24000, avgLikes: 2800,
-    campaignId: 'camp2', stage: 'products_received', daysInStage: 4, isOverdue: true,
+    campaignId: 'camp2', stage: 'awaiting_content', daysInStage: 4, isOverdue: true,
     photo: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop&crop=face', initials: 'MA', city: 'Philadelphia, PA',
     bio: 'Clean beauty advocate. Sharing my favorite products.',
     email: 'maya@mayabeauty.com', phone: '(215) 555-0256',
@@ -289,7 +289,7 @@ export const MOCK_CREATORS = [
   {
     id: 'c18', name: 'Emma Wright', handle: '@emmascents', niche: 'Beauty',
     followers: 19400, engagement: 3.9, avgViews: 27000, avgLikes: 3200,
-    campaignId: 'camp2', stage: 'waiting_for_content', daysInStage: 5, isOverdue: true,
+    campaignId: 'camp2', stage: 'awaiting_content', daysInStage: 5, isOverdue: true,
     photo: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=200&h=200&fit=crop&crop=face', initials: 'EW', city: 'Boston, MA',
     bio: 'Fragrance collector & skincare enthusiast. Sharing my daily routines.',
     email: 'emma@emmascents.com', phone: '(617) 555-0145',
