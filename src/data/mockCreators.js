@@ -504,4 +504,11 @@ MOCK_CREATORS.forEach((c, i) => {
   const d = new Date('2026-03-27');
   d.setDate(d.getDate() - (i * 2) % 30);
   c.dateAdded = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  // Program-stage creators have no campaign by default
+  if (['not_in_program', 'invited_to_program', 'in_program'].includes(c.stage)) {
+    c.campaignId = null;
+    c.campaignIds = [];
+  } else {
+    c.campaignIds = c.campaignId ? [c.campaignId] : [];
+  }
 });

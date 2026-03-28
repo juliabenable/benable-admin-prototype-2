@@ -194,12 +194,26 @@ export default function CreatorProgram() {
   const bulkAssignCampaign = () => {
     if (selected.size === 0 || !assignCampaign) return;
     const camp = campaigns.find(c => c.id === assignCampaign);
-    setCreators(prev => prev.map(c =>
-      selected.has(c.id) ? { ...c, campaignId: assignCampaign, stage: 'in_program', daysInStage: 0, isOverdue: false } : c
-    ));
+    setCreators(prev => prev.map(c => {
+      if (!selected.has(c.id)) return c;
+      const existing = c.campaignIds || (c.campaignId ? [c.campaignId] : []);
+      if (existing.includes(assignCampaign)) return c;
+      return { ...c, campaignIds: [...existing, assignCampaign], campaignId: assignCampaign, stage: 'in_program', daysInStage: 0, isOverdue: false };
+    }));
     addToast(`${selected.size} creators assigned to ${camp?.brand || camp?.name}`);
     setSelected(new Set());
     setAssignCampaign('');
+  };
+
+  const removeFromCampaign = (creatorId, campId) => {
+    setCreators(prev => prev.map(c => {
+      if (c.id !== creatorId) return c;
+      const existing = c.campaignIds || (c.campaignId ? [c.campaignId] : []);
+      const updated = existing.filter(id => id !== campId);
+      return { ...c, campaignIds: updated, campaignId: updated[0] || null };
+    }));
+    const camp = campaigns.find(c => c.id === campId);
+    addToast(`Removed from ${camp?.brand || camp?.name}`);
   };
 
   // Total count (unfiltered)
@@ -307,7 +321,7 @@ export default function CreatorProgram() {
                         <Avatar initials={creator.initials} size={32} photo={creator.photo} />
                         <div>
                           <div style={{ fontWeight: 600, fontSize: 14 }}>{creator.name}</div>
-                          <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{creator.handle}</div>
+                          <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{creator.handle}{creator.followers ? ` · ${formatFollowers(creator.followers)}` : ''}</div>
                         </div>
                       </div>
                     </td>
@@ -334,15 +348,29 @@ export default function CreatorProgram() {
                       </span>
                     </td>
                     <td>
-                      {creator.campaignId ? (() => {
-                        const camp = campaigns.find(c => c.id === creator.campaignId);
-                        return camp ? (
-                          <span style={styles.campaignTag}>
-                            {camp.logo && <img src={camp.logo} alt="" style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover' }} />}
-                            {camp.brand || camp.name}
-                          </span>
-                        ) : null;
-                      })() : <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>—</span>}
+                      {(() => {
+                        const ids = creator.campaignIds || (creator.campaignId ? [creator.campaignId] : []);
+                        if (ids.length === 0) return <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>—</span>;
+                        return (
+                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                            {ids.map(cid => {
+                              const camp = campaigns.find(c => c.id === cid);
+                              if (!camp) return null;
+                              return (
+                                <span key={cid} style={styles.campaignTag}>
+                                  {camp.logo && <img src={camp.logo} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'cover' }} />}
+                                  {camp.brand || camp.name}
+                                  <button
+                                    style={styles.campaignRemove}
+                                    onClick={() => removeFromCampaign(creator.id, cid)}
+                                    title="Remove from campaign"
+                                  >×</button>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td>
                       <select
@@ -571,6 +599,17 @@ const styles = {
     background: '#EDE9FE',
     color: '#6D28D9',
     whiteSpace: 'nowrap',
+  },
+  campaignRemove: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: '#6D28D9',
+    fontSize: 14,
+    fontWeight: 700,
+    padding: '0 0 0 2px',
+    lineHeight: 1,
+    fontFamily: 'inherit',
   },
   emptyState: {
     display: 'flex',
