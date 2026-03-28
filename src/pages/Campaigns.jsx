@@ -162,8 +162,7 @@ export default function Campaigns() {
         <div style={styles.columnHeader}>
           <div style={{ width: 34, flexShrink: 0 }} />
           <div style={{ flex: 1 }}>Creator</div>
-          <div style={{ width: 70, flexShrink: 0, textAlign: 'center' }}>Contact</div>
-          <div style={{ width: 140, flexShrink: 0 }}>Status</div>
+          <div style={{ width: 160, flexShrink: 0 }}>Status</div>
           <div style={{ width: 30, flexShrink: 0, textAlign: 'center' }}>Days</div>
           <div style={{ width: 16, flexShrink: 0 }} />
         </div>
@@ -201,6 +200,24 @@ export default function Campaigns() {
                             <svg width="12" height="14" viewBox="0 0 14 16" fill="none"><path d="M10 0.5C10 2.71 11.79 4.5 14 4.5V7C12.17 7 10.5 6.26 9.25 5.1V11C9.25 13.76 7.01 16 4.25 16C1.49 16 -0.75 13.76 -0.75 11C-0.75 8.24 1.49 6 4.25 6V8.5C2.87 8.5 1.75 9.62 1.75 11C1.75 12.38 2.87 13.5 4.25 13.5C5.63 13.5 6.75 12.38 6.75 11V0.5H10Z" fill="#010101" transform="translate(0.5, 0)"/></svg>
                           </a>
                         )}
+                        {creator.email && (
+                          <button
+                            style={styles.contactBtn}
+                            title={creator.email}
+                            onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(creator.email); addToast(`Copied ${creator.email}`); }}
+                          >
+                            <Mail size={12} />
+                          </button>
+                        )}
+                        {creator.phone && (
+                          <button
+                            style={styles.contactBtn}
+                            title={creator.phone}
+                            onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(creator.phone); addToast(`Copied ${creator.phone}`); }}
+                          >
+                            <Phone size={12} />
+                          </button>
+                        )}
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
                         {creator.handle}
@@ -208,28 +225,7 @@ export default function Campaigns() {
                       </div>
                     </div>
 
-                    {/* Contact icons */}
-                    <div style={{ width: 70, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                      {creator.email && (
-                        <button
-                          style={styles.contactBtn}
-                          title={creator.email}
-                          onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(creator.email); addToast(`Copied ${creator.email}`); }}
-                        >
-                          <Mail size={13} />
-                        </button>
-                      )}
-                      {creator.phone && (
-                        <button
-                          style={styles.contactBtn}
-                          title={creator.phone}
-                          onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(creator.phone); addToast(`Copied ${creator.phone}`); }}
-                        >
-                          <Phone size={13} />
-                        </button>
-                      )}
-                    </div>
-
+                    <div style={{ width: 160, flexShrink: 0 }}>
                     <select
                       value={creator.stage}
                       onChange={e => { e.stopPropagation(); changeStage(creator.id, e.target.value); }}
@@ -250,13 +246,13 @@ export default function Campaigns() {
                         backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='${encodeURIComponent(stageInfo.color)}' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'right 4px center',
-                        flexShrink: 0,
                       }}
                     >
                       {CAMPAIGN_STAGES.map(s => (
                         <option key={s.key} value={s.key}>{s.label}</option>
                       ))}
                     </select>
+                    </div>
 
                     <span style={{ fontSize: 12, color: creator.isOverdue ? '#DC2626' : 'var(--color-text-tertiary)', fontWeight: creator.isOverdue ? 600 : 400, width: 30, textAlign: 'center', flexShrink: 0 }}>
                       {creator.daysInStage}d
@@ -408,15 +404,16 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 26,
-    height: 26,
+    width: 18,
+    height: 18,
     padding: 0,
-    border: '1px solid var(--color-border)',
-    background: 'var(--color-bg-page)',
+    border: 'none',
+    background: 'transparent',
     cursor: 'pointer',
     color: '#94A3B8',
-    borderRadius: 5,
-    transition: 'color 150ms, background 150ms',
+    borderRadius: 3,
+    transition: 'color 150ms',
+    flexShrink: 0,
   },
   columnHeader: {
     display: 'flex',
