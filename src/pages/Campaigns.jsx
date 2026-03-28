@@ -5,16 +5,15 @@ import { formatFollowers } from '../utils/formatters';
 import { ChevronRight, X, Send, Check, Image, Sparkles, Search } from 'lucide-react';
 
 const CAMPAIGN_STAGES = [
-  { key: 'invited_to_campaign', label: 'Invited to Campaign', short: 'Invited', color: '#92400E', bg: '#FEF3C7' },
-  { key: 'accepted_campaign', label: 'Accepted Campaign', short: 'Accepted', color: '#166534', bg: '#DCFCE7' },
-  { key: 'declined_campaign', label: 'Declined Campaign', short: 'Declined', color: '#991B1B', bg: '#FEE2E2' },
-  { key: 'products_chosen', label: 'Products Chosen', short: 'Chosen', color: '#1E40AF', bg: '#DBEAFE' },
-  { key: 'products_ordered', label: 'Products Ordered', short: 'Ordered', color: '#6D28D9', bg: '#EDE9FE' },
-  { key: 'awaiting_content', label: 'Awaiting Content', short: 'Awaiting', color: '#0E7490', bg: '#CFFAFE' },
-  { key: 'content_submitted', label: 'Content Submitted', short: 'Submitted', color: '#991B1B', bg: '#FEE2E2' },
-  { key: 'content_approved', label: 'Feedback Given', short: 'Feedback', color: '#166534', bg: '#DCFCE7' },
-  { key: 'posted', label: 'Posted', short: 'Posted', color: '#0E7490', bg: '#CFFAFE' },
-  { key: 'completed', label: 'Completed', short: 'Completed', color: '#6B7280', bg: '#F3F4F6' },
+  { key: 'invited_to_campaign', label: 'Invited', color: '#92400E', bg: '#FEF3C7' },
+  { key: 'accepted_campaign', label: 'Accepted', color: '#166534', bg: '#DCFCE7' },
+  { key: 'declined_campaign', label: 'Declined', color: '#991B1B', bg: '#FEE2E2' },
+  { key: 'products_ordered', label: 'Products Ordered', color: '#6D28D9', bg: '#EDE9FE' },
+  { key: 'awaiting_content', label: 'Awaiting Content', color: '#0E7490', bg: '#CFFAFE' },
+  { key: 'awaiting_review', label: 'Awaiting Review', color: '#991B1B', bg: '#FEE2E2' },
+  { key: 'feedback_given', label: 'Feedback Given', color: '#1E40AF', bg: '#DBEAFE' },
+  { key: 'posted', label: 'Posted', color: '#0E7490', bg: '#CFFAFE' },
+  { key: 'completed', label: 'Completed', color: '#6B7280', bg: '#F3F4F6' },
 ];
 
 const STAGE_MAP = Object.fromEntries(CAMPAIGN_STAGES.map(s => [s.key, s]));
@@ -169,7 +168,7 @@ export default function Campaigns() {
             {campaignCreators.map(creator => {
               const stageInfo = STAGE_MAP[creator.stage] || { label: creator.stage, color: '#6B7280', bg: '#F3F4F6' };
               const isExpanded = expandedId === creator.id;
-              const hasContent = creator.stage === 'content_submitted' && creator.contentSubmission;
+              const hasContent = creator.stage === 'awaiting_review' && creator.contentSubmission;
 
               return (
                 <div key={creator.id} style={styles.row}>

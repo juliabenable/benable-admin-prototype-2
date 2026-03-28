@@ -85,7 +85,7 @@ export const MOCK_CREATORS = [
   {
     id: 'c3', name: 'Amy Chen', handle: '@amybeauty', niche: 'Beauty',
     followers: 22300, engagement: 3.8, avgViews: 35000, avgLikes: 4200,
-    campaignId: 'camp1', stage: 'content_submitted', daysInStage: 0, isOverdue: false,
+    campaignId: 'camp1', stage: 'awaiting_review', daysInStage: 0, isOverdue: false,
     photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face', initials: 'AC', city: 'San Francisco, CA',
     bio: 'Beauty & wellness creator. Clean beauty advocate.',
     email: 'amy@amybeauty.com', phone: '(415) 555-0198',
@@ -99,7 +99,7 @@ export const MOCK_CREATORS = [
   {
     id: 'c4', name: 'Lisa Park', handle: '@lisaeats', niche: 'Food',
     followers: 15700, engagement: 4.5, avgViews: 22000, avgLikes: 2800,
-    campaignId: 'camp1', stage: 'products_chosen', daysInStage: 3, isOverdue: false,
+    campaignId: 'camp1', stage: 'products_ordered', daysInStage: 3, isOverdue: false,
     photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=face', initials: 'LP', city: 'Portland, OR',
     bio: 'Food blogger & recipe developer. Farm to table advocate.',
     email: 'lisa@lisaeats.com', phone: null,
@@ -152,7 +152,7 @@ export const MOCK_CREATORS = [
   {
     id: 'c8', name: 'Priya Patel', handle: '@priyaeats', niche: 'Food',
     followers: 7800, engagement: 5.5, avgViews: 11000, avgLikes: 1600,
-    campaignId: 'camp1', stage: 'content_approved', daysInStage: 1, isOverdue: false,
+    campaignId: 'camp1', stage: 'feedback_given', daysInStage: 1, isOverdue: false,
     photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=face', initials: 'PP', city: 'Seattle, WA',
     bio: 'Indian-fusion home cooking. Spice lover & recipe creator.',
     email: 'priya@priyaeats.com', phone: null,
@@ -248,7 +248,7 @@ export const MOCK_CREATORS = [
   {
     id: 'c15', name: 'Jordan Blake', handle: '@jordanwellness', niche: 'Wellness',
     followers: 9800, engagement: 6.2, avgViews: 14000, avgLikes: 1700,
-    campaignId: 'camp2', stage: 'content_submitted', daysInStage: 0, isOverdue: false,
+    campaignId: 'camp2', stage: 'awaiting_review', daysInStage: 0, isOverdue: false,
     photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&crop=face', initials: 'JB', city: 'Boulder, CO',
     bio: 'Wellness, mindfulness, and self-care rituals.',
     email: 'jordan@jordanwellness.com', phone: null,
@@ -262,7 +262,7 @@ export const MOCK_CREATORS = [
   {
     id: 'c16', name: 'Kai Hernandez', handle: '@kaiscents', niche: 'Beauty',
     followers: 13500, engagement: 4.7, avgViews: 19000, avgLikes: 2400,
-    campaignId: 'camp2', stage: 'content_submitted', daysInStage: 1, isOverdue: false,
+    campaignId: 'camp2', stage: 'awaiting_review', daysInStage: 1, isOverdue: false,
     photo: 'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=200&h=200&fit=crop&crop=face', initials: 'KH', city: 'San Antonio, TX',
     bio: 'Fragrance & skincare reviews. Honest opinions only.',
     email: 'kai@kaiscents.com', phone: '(210) 555-0312',
@@ -315,7 +315,7 @@ export const MOCK_CREATORS = [
   {
     id: 'c20', name: 'Taylor James', handle: '@taylorjskin', niche: 'Beauty',
     followers: 8700, engagement: 5.8, avgViews: 13000, avgLikes: 1700,
-    campaignId: 'camp2', stage: 'content_approved', daysInStage: 0, isOverdue: false,
+    campaignId: 'camp2', stage: 'feedback_given', daysInStage: 0, isOverdue: false,
     photo: 'https://images.unsplash.com/photo-1523264653568-d4e4926be52e?w=200&h=200&fit=crop&crop=face', initials: 'TJ', city: 'Minneapolis, MN',
     bio: 'Skincare & grooming. No-BS product reviews.',
     email: 'taylor@taylorjskin.com', phone: '(612) 555-0289',
@@ -341,7 +341,7 @@ export const MOCK_CREATORS = [
   {
     id: 'c22', name: 'Lena Foster', handle: '@lenaskin', niche: 'Wellness',
     followers: 6800, engagement: 6.5, avgViews: 9000, avgLikes: 1100,
-    campaignId: 'camp2', stage: 'products_chosen', daysInStage: 1, isOverdue: false,
+    campaignId: 'camp2', stage: 'products_ordered', daysInStage: 1, isOverdue: false,
     photo: 'https://images.unsplash.com/photo-1499557354967-2b2d8910bcca?w=200&h=200&fit=crop&crop=face', initials: 'LF', city: 'Portland, OR',
     bio: 'Holistic wellness & skincare. Nature-inspired living.',
     email: 'lena@lenaskin.com', phone: null,
