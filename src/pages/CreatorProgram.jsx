@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Upload, Check, Send, Plus, X, Search } from 'lucide-react';
+import { Upload, Check, Send, Plus, X, Search, Mail } from 'lucide-react';
 import { useAppState } from '../hooks/useAppState';
 import Avatar from '../components/Avatar';
 import { formatFollowers } from '../utils/formatters';
@@ -295,6 +295,7 @@ export default function CreatorProgram() {
                   />
                 </th>
                 <th style={styles.th}>CREATOR</th>
+                <th style={styles.th}>EMAIL</th>
                 <th style={styles.th}>PLATFORM</th>
                 <th style={styles.th}>FOLLOWERS</th>
                 <th style={styles.th}>STATUS</th>
@@ -325,6 +326,22 @@ export default function CreatorProgram() {
                           <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>{creator.handle}</div>
                         </div>
                       </div>
+                    </td>
+                    <td style={styles.td}>
+                      {creator.email ? (
+                        <button
+                          style={styles.emailBtn}
+                          title={creator.email}
+                          onClick={() => {
+                            navigator.clipboard.writeText(creator.email);
+                            addToast(`Copied ${creator.email}`);
+                          }}
+                        >
+                          <Mail size={14} />
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>—</span>
+                      )}
                     </td>
                     <td style={styles.td}>
                       <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
@@ -579,6 +596,19 @@ const styles = {
   td: {
     padding: '10px 14px',
     verticalAlign: 'middle',
+  },
+  emailBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 30,
+    height: 30,
+    borderRadius: 6,
+    border: '1px solid var(--color-border)',
+    background: 'var(--color-bg-page)',
+    cursor: 'pointer',
+    color: 'var(--color-text-secondary)',
+    transition: 'background 150ms, color 150ms',
   },
   campaignTag: {
     display: 'inline-flex',
