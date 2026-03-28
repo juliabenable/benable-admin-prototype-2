@@ -247,9 +247,6 @@ export default function DraftPortal() {
                     style={styles.checkbox}
                   />
 
-                  {/* Expand arrow */}
-                  <ChevronRight size={16} style={{ color: 'var(--color-text-tertiary)', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 150ms', flexShrink: 0 }} />
-
                   {/* Creator info */}
                   <Avatar initials={creator.initials} size={40} photo={creator.photo} />
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -289,7 +286,7 @@ export default function DraftPortal() {
                     <div style={{ ...styles.toggleThumb, transform: visible ? 'translateX(16px)' : 'translateX(0)' }} />
                   </div>
 
-                  {/* Move buttons + order input — far right */}
+                  {/* Move buttons + order input */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
                     <button style={styles.moveBtn} onClick={() => moveCreator(index, -1)} disabled={index === 0}><ChevronUp size={14} /></button>
                     <button style={styles.moveBtn} onClick={() => moveCreator(index, 1)} disabled={index === orderedCreators.length - 1}><ChevronDown size={14} /></button>
@@ -300,6 +297,9 @@ export default function DraftPortal() {
                       style={styles.orderInput}
                     />
                   </div>
+
+                  {/* Expand arrow — far right */}
+                  <ChevronRight size={18} style={{ color: 'var(--color-text-tertiary)', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 150ms', flexShrink: 0 }} />
                 </div>
 
                 {/* Expanded drawer */}
