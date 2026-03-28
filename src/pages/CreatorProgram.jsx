@@ -193,7 +193,7 @@ export default function CreatorProgram() {
     if (selected.size === 0 || !assignCampaign) return;
     const camp = campaigns.find(c => c.id === assignCampaign);
     setCreators(prev => prev.map(c =>
-      selected.has(c.id) ? { ...c, campaignId: assignCampaign, stage: 'assigned_to_campaign', daysInStage: 0, isOverdue: false } : c
+      selected.has(c.id) ? { ...c, campaignId: assignCampaign, stage: 'in_program', daysInStage: 0, isOverdue: false } : c
     ));
     addToast(`${selected.size} creators assigned to ${camp?.brand || camp?.name}`);
     setSelected(new Set());
@@ -281,9 +281,9 @@ export default function CreatorProgram() {
                 </th>
                 <th>Creator</th>
                 <th>Benable ID</th>
-                <th>Followers</th>
                 <th>Email</th>
                 <th>Status</th>
+                <th>Campaign</th>
                 <th>Select to change</th>
               </tr>
             </thead>
@@ -311,7 +311,6 @@ export default function CreatorProgram() {
                     <td style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'monospace' }}>
                       {creator.benableId || '—'}
                     </td>
-                    <td style={{ fontSize: 13 }}>{formatFollowers(creator.followers)}</td>
                     <td style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{creator.email || '—'}</td>
                     <td>
                       <span style={{
@@ -327,6 +326,17 @@ export default function CreatorProgram() {
                       }}>
                         {stageInfo?.label}
                       </span>
+                    </td>
+                    <td>
+                      {creator.campaignId ? (() => {
+                        const camp = campaigns.find(c => c.id === creator.campaignId);
+                        return camp ? (
+                          <span style={styles.campaignTag}>
+                            {camp.logo && <img src={camp.logo} alt="" style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover' }} />}
+                            {camp.brand || camp.name}
+                          </span>
+                        ) : null;
+                      })() : <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>—</span>}
                     </td>
                     <td>
                       <select
@@ -543,6 +553,18 @@ const styles = {
     height: 24,
     background: '#4B5563',
     flexShrink: 0,
+  },
+  campaignTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    fontSize: 11,
+    fontWeight: 500,
+    padding: '2px 8px',
+    borderRadius: 3,
+    background: '#EDE9FE',
+    color: '#6D28D9',
+    whiteSpace: 'nowrap',
   },
   emptyState: {
     display: 'flex',
