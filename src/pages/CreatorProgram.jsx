@@ -12,6 +12,13 @@ const PROGRAM_STAGES = [
 
 const STAGE_LABELS = Object.fromEntries(PROGRAM_STAGES.map(s => [s.key, s]));
 
+const PLATFORM_ICONS = {
+  ig: { label: 'Instagram', icon: '📸' },
+  tiktok: { label: 'TikTok', icon: '🎵' },
+  both: { label: 'IG + TikTok', icon: '📸🎵' },
+  youtube: { label: 'YouTube', icon: '▶️' },
+};
+
 function generateBenableId() {
   return Math.floor(Math.random() * 999000 + 1000);
 }
@@ -56,7 +63,6 @@ export default function CreatorProgram() {
   const programCreators = useMemo(() => {
     let list = creators.filter(c => ['not_in_program', 'invited_to_program', 'in_program'].includes(c.stage));
 
-    // Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(c =>
@@ -66,18 +72,15 @@ export default function CreatorProgram() {
       );
     }
 
-    // Status filter
     if (statusFilter !== 'all') {
       list = list.filter(c => c.stage === statusFilter);
     }
 
-    // Sort
     if (sortBy === 'az') {
       list = [...list].sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy === 'za') {
       list = [...list].sort((a, b) => b.name.localeCompare(a.name));
     }
-    // 'newest' = default order (most recently added first, which is already the array order)
 
     return list;
   }, [creators, searchQuery, statusFilter, sortBy]);
@@ -216,7 +219,6 @@ export default function CreatorProgram() {
     addToast(`Removed from ${camp?.brand || camp?.name}`);
   };
 
-  // Total count (unfiltered)
   const totalCount = creators.filter(c => ['not_in_program', 'invited_to_program', 'in_program'].includes(c.stage)).length;
 
   return (
@@ -231,10 +233,7 @@ export default function CreatorProgram() {
           <div>
             <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px 0' }}>Upload Creators</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button
-                style={styles.chooseFileBtn}
-                onClick={() => fileRef.current?.click()}
-              >
+              <button style={styles.chooseFileBtn} onClick={() => fileRef.current?.click()}>
                 Choose File
               </button>
               <span style={{ fontSize: 13, color: 'var(--color-text-tertiary)' }}>No file chosen</span>
@@ -244,152 +243,157 @@ export default function CreatorProgram() {
               CSV format: Name, Social Handle, Platform, Follower Count
             </p>
           </div>
-          <button
-            style={styles.addCreatorBtn}
-            onClick={() => setShowAddModal(true)}
-          >
+          <button style={styles.addCreatorBtn} onClick={() => setShowAddModal(true)}>
             <Plus size={16} /> Add Creator
           </button>
         </div>
       </div>
 
-      {/* Search & Filter bar */}
-      <div style={styles.filterBar}>
-        <div style={styles.searchWrap}>
-          <Search size={16} color="#9CA3AF" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-          <input
-            type="text"
-            placeholder="Search by name, handle or Benable ID..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            style={styles.searchInput}
-          />
+      {/* Combined card: search + table */}
+      <div style={styles.card}>
+        {/* Search & Filter bar */}
+        <div style={styles.filterBar}>
+          <div style={styles.searchWrap}>
+            <Search size={16} color="#9CA3AF" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="text"
+              placeholder="Search by name or handle..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={styles.searchInput}
+            />
+          </div>
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={styles.filterSelect}>
+            <option value="all">All Status</option>
+            {PROGRAM_STAGES.map(s => (
+              <option key={s.key} value={s.key}>{s.label}</option>
+            ))}
+          </select>
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={styles.filterSelect}>
+            <option value="newest">Newest First</option>
+            <option value="az">A → Z</option>
+            <option value="za">Z → A</option>
+          </select>
+          <span style={styles.countBadge}>All Creators {totalCount}</span>
         </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={styles.filterSelect}>
-          <option value="all">All Status</option>
-          {PROGRAM_STAGES.map(s => (
-            <option key={s.key} value={s.key}>{s.label}</option>
-          ))}
-        </select>
-        <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={styles.filterSelect}>
-          <option value="newest">Newest First</option>
-          <option value="az">A → Z</option>
-          <option value="za">Z → A</option>
-        </select>
-        <span style={styles.countBadge}>All Creators {totalCount}</span>
-      </div>
 
-      {programCreators.length === 0 ? (
-        <div style={styles.emptyState}>
-          <p>No creators match your filters.</p>
-        </div>
-      ) : (
-        <div className="table-container">
-          <table>
+        {/* Table */}
+        {programCreators.length === 0 ? (
+          <div style={styles.emptyState}>
+            <p>No creators match your filters.</p>
+          </div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr>
-                <th style={{ width: 40 }}>
+              <tr style={styles.theadRow}>
+                <th style={styles.th}>
                   <input
                     type="checkbox"
                     checked={selected.size === programCreators.length && programCreators.length > 0}
                     onChange={toggleAll}
+                    style={{ accentColor: '#7C3AED' }}
                   />
                 </th>
-                <th>Creator</th>
-                <th>Benable ID</th>
-                <th>Email</th>
-                <th>Date Added</th>
-                <th>Status</th>
-                <th>Campaign</th>
-                <th>Select to change</th>
+                <th style={styles.th}>CREATOR</th>
+                <th style={styles.th}>PLATFORM</th>
+                <th style={styles.th}>FOLLOWERS</th>
+                <th style={styles.th}>STATUS</th>
+                <th style={styles.th}>CAMPAIGN</th>
+                <th style={{ ...styles.th, textAlign: 'right' }}>DATE ADDED</th>
               </tr>
             </thead>
             <tbody>
               {programCreators.map(creator => {
                 const stageInfo = STAGE_LABELS[creator.stage];
+                const platInfo = PLATFORM_ICONS[creator.platform] || PLATFORM_ICONS.ig;
+                const campIds = creator.campaignIds || (creator.campaignId ? [creator.campaignId] : []);
                 return (
-                  <tr key={creator.id} style={selected.has(creator.id) ? { background: 'var(--color-accent-light)' } : {}}>
-                    <td>
+                  <tr key={creator.id} style={{ ...styles.tbodyRow, ...(selected.has(creator.id) ? { background: '#F5F3FF' } : {}) }}>
+                    <td style={styles.td}>
                       <input
                         type="checkbox"
                         checked={selected.has(creator.id)}
                         onChange={() => toggleSelect(creator.id)}
+                        style={{ accentColor: '#7C3AED' }}
                       />
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Avatar initials={creator.initials} size={32} photo={creator.photo} />
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Avatar initials={creator.initials} size={34} photo={creator.photo} />
                         <div>
-                          <div style={{ fontWeight: 600, fontSize: 14 }}>{creator.name}</div>
-                          <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{creator.handle}{creator.followers ? ` · ${formatFollowers(creator.followers)}` : ''}</div>
+                          <div style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.3 }}>{creator.name}</div>
+                          <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>{creator.handle}</div>
                         </div>
                       </div>
                     </td>
-                    <td style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'monospace' }}>
-                      {creator.benableId || '—'}
-                    </td>
-                    <td style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{creator.email || '—'}</td>
-                    <td style={{ fontSize: 12, color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' }}>
-                      {creator.dateAdded || '—'}
-                    </td>
-                    <td>
-                      <span style={{
-                        fontSize: 11,
-                        fontWeight: 500,
-                        padding: '2px 8px',
-                        borderRadius: 3,
-                        color: stageInfo?.color,
-                        background: stageInfo?.bg,
-                        whiteSpace: 'nowrap',
-                        display: 'inline-block',
-                        letterSpacing: '0.01em',
-                      }}>
-                        {stageInfo?.label}
+                    <td style={styles.td}>
+                      <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                        {platInfo.icon} {platInfo.label}
                       </span>
                     </td>
-                    <td>
-                      {(() => {
-                        const ids = creator.campaignIds || (creator.campaignId ? [creator.campaignId] : []);
-                        if (ids.length === 0) return <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>—</span>;
-                        return (
-                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                            {ids.map(cid => {
-                              const camp = campaigns.find(c => c.id === cid);
-                              if (!camp) return null;
-                              return (
-                                <span key={cid} style={styles.campaignTag}>
-                                  {camp.logo && <img src={camp.logo} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'cover' }} />}
-                                  {camp.brand || camp.name}
-                                  <button
-                                    style={styles.campaignRemove}
-                                    onClick={() => removeFromCampaign(creator.id, cid)}
-                                    title="Remove from campaign"
-                                  >×</button>
-                                </span>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()}
+                    <td style={{ ...styles.td, fontSize: 13, fontWeight: 600 }}>
+                      {creator.followers ? formatFollowers(creator.followers) : '—'}
                     </td>
-                    <td>
+                    <td style={styles.td}>
                       <select
                         value={creator.stage}
                         onChange={e => changeOneStatus(creator.id, e.target.value)}
-                        style={styles.filterSelect}
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 500,
+                          padding: '3px 6px',
+                          borderRadius: 4,
+                          color: stageInfo?.color,
+                          background: stageInfo?.bg,
+                          border: `1px solid ${stageInfo?.bg}`,
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          appearance: 'none',
+                          WebkitAppearance: 'none',
+                          paddingRight: 18,
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='${encodeURIComponent(stageInfo?.color || '#666')}' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 4px center',
+                        }}
                       >
                         {PROGRAM_STAGES.map(s => (
                           <option key={s.key} value={s.key}>{s.label}</option>
                         ))}
                       </select>
                     </td>
+                    <td style={styles.td}>
+                      {campIds.length === 0 ? (
+                        <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>—</span>
+                      ) : (
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          {campIds.map(cid => {
+                            const camp = campaigns.find(c => c.id === cid);
+                            if (!camp) return null;
+                            return (
+                              <span key={cid} style={styles.campaignTag}>
+                                {camp.logo && <img src={camp.logo} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'cover' }} />}
+                                {camp.brand || camp.name}
+                                <button
+                                  style={styles.campaignRemove}
+                                  onClick={() => removeFromCampaign(creator.id, cid)}
+                                  title="Remove"
+                                >×</button>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'right', fontSize: 12, color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' }}>
+                      {creator.dateAdded || '—'}
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Add Creator Modal */}
       {showAddModal && (
@@ -434,14 +438,11 @@ export default function CreatorProgram() {
         </div>
       )}
 
-      {/* Fixed bottom action bar — only when selected */}
+      {/* Fixed bottom action bar */}
       {selected.size > 0 && (
         <div style={styles.bottomBar}>
           <span style={{ fontWeight: 600 }}>{selected.size} selected</span>
-          <button
-            style={styles.bottomBtn}
-            onClick={() => setSelected(new Set())}
-          >
+          <button style={styles.bottomBtn} onClick={() => setSelected(new Set())}>
             Deselect All
           </button>
           <button
@@ -513,11 +514,18 @@ const styles = {
     borderRadius: 4,
     cursor: 'pointer',
   },
+  card: {
+    background: 'var(--color-bg-card)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)',
+    overflow: 'hidden',
+  },
   filterBar: {
     display: 'flex',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 'var(--space-4)',
+    padding: '16px 20px',
+    borderBottom: '1px solid var(--color-border)',
   },
   searchWrap: {
     position: 'relative',
@@ -531,7 +539,7 @@ const styles = {
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-md)',
     outline: 'none',
-    background: 'var(--color-bg-card)',
+    background: 'var(--color-bg-page)',
   },
   filterSelect: {
     height: 36,
@@ -552,6 +560,58 @@ const styles = {
     color: 'var(--color-text-secondary)',
     whiteSpace: 'nowrap',
     border: '1px solid var(--color-border)',
+  },
+  theadRow: {
+    borderBottom: '1px solid var(--color-border)',
+  },
+  th: {
+    padding: '10px 14px',
+    fontSize: 11,
+    fontWeight: 600,
+    color: 'var(--color-text-tertiary)',
+    textAlign: 'left',
+    letterSpacing: '0.5px',
+    whiteSpace: 'nowrap',
+  },
+  tbodyRow: {
+    borderBottom: '1px solid var(--color-border)',
+  },
+  td: {
+    padding: '10px 14px',
+    verticalAlign: 'middle',
+  },
+  campaignTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    fontSize: 11,
+    fontWeight: 500,
+    padding: '2px 8px',
+    borderRadius: 3,
+    background: '#EDE9FE',
+    color: '#6D28D9',
+    whiteSpace: 'nowrap',
+  },
+  campaignRemove: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: '#6D28D9',
+    fontSize: 14,
+    fontWeight: 700,
+    padding: '0 0 0 2px',
+    lineHeight: 1,
+    fontFamily: 'inherit',
+  },
+  emptyState: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 8,
+    padding: 'var(--space-10)',
+    color: 'var(--color-text-secondary)',
+    fontSize: 14,
+    textAlign: 'center',
   },
   bottomBar: {
     position: 'fixed',
@@ -587,42 +647,6 @@ const styles = {
     height: 24,
     background: '#4B5563',
     flexShrink: 0,
-  },
-  campaignTag: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 5,
-    fontSize: 11,
-    fontWeight: 500,
-    padding: '2px 8px',
-    borderRadius: 3,
-    background: '#EDE9FE',
-    color: '#6D28D9',
-    whiteSpace: 'nowrap',
-  },
-  campaignRemove: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: '#6D28D9',
-    fontSize: 14,
-    fontWeight: 700,
-    padding: '0 0 0 2px',
-    lineHeight: 1,
-    fontFamily: 'inherit',
-  },
-  emptyState: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 8,
-    padding: 'var(--space-10)',
-    background: 'var(--color-bg-card)',
-    borderRadius: 'var(--radius-lg)',
-    border: '1px solid var(--color-border)',
-    color: 'var(--color-text-secondary)',
-    fontSize: 14,
-    textAlign: 'center',
   },
   // Modal styles
   overlay: {
