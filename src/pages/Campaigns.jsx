@@ -128,12 +128,12 @@ export default function Campaigns() {
               key={s.key}
               style={{
                 ...styles.pill,
-                borderColor: isActive ? s.color : 'var(--color-border)',
-                borderLeftColor: s.color,
+                borderColor: s.color,
                 borderLeftWidth: 3,
-                color: isActive ? s.color : 'var(--color-text-secondary)',
-                fontWeight: isActive ? 600 : 400,
-                backgroundColor: isActive ? s.bg : 'var(--color-bg-card)',
+                color: s.color,
+                backgroundColor: s.bg,
+                fontWeight: isActive ? 700 : 500,
+                boxShadow: isActive ? `0 0 0 1px ${s.color}` : 'none',
               }}
               onClick={() => setStatusFilter(s.key)}
             >
