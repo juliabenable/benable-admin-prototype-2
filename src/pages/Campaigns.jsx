@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useAppState } from '../hooks/useAppState';
 import Avatar from '../components/Avatar';
 import { formatFollowers } from '../utils/formatters';
-import { ChevronRight, X, Send, Check, Image, Sparkles, FileText, Shield } from 'lucide-react';
+import { ChevronRight, X, Send, Check, Image, Sparkles, FileText, Shield, Search } from 'lucide-react';
 
 const CAMPAIGN_STAGES = [
   { key: 'invited_to_campaign', label: 'Invited to Campaign', color: '#92400E', bg: '#FEF3C7' },
@@ -27,25 +27,39 @@ export default function Campaigns() {
   const [activeTab, setActiveTab] = useState(liveCampaigns[0]?.id || '');
   const activeCampaign = campaigns.find(c => c.id === activeTab);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState(null);
   const [feedback, setFeedback] = useState({});
 
-  const campaignCreators = useMemo(() => {
-    let list = creators.filter(c =>
+  const allForCampaign = useMemo(() => {
+    return creators.filter(c =>
       c.campaignId === activeTab && !PROGRAM_STAGES.includes(c.stage)
     );
+  }, [creators, activeTab]);
+
+  const campaignCreators = useMemo(() => {
+    let list = [...allForCampaign];
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.handle.toLowerCase().includes(q)
+      );
+    }
+
     if (statusFilter !== 'all') {
       list = list.filter(c => c.stage === statusFilter);
     }
+
     return list;
-  }, [creators, activeTab, statusFilter]);
+  }, [allForCampaign, searchQuery, statusFilter]);
 
   const statusCounts = useMemo(() => {
-    const allForCampaign = creators.filter(c => c.campaignId === activeTab && !PROGRAM_STAGES.includes(c.stage));
     const counts = { all: allForCampaign.length };
     allForCampaign.forEach(c => { counts[c.stage] = (counts[c.stage] || 0) + 1; });
     return counts;
-  }, [creators, activeTab]);
+  }, [allForCampaign]);
 
   const handleApprove = (creatorId) => {
     addToast('Content approved');
@@ -75,7 +89,7 @@ export default function Campaigns() {
           <button
             key={camp.id}
             style={{ ...styles.tab, ...(activeTab === camp.id ? styles.tabActive : styles.tabInactive) }}
-            onClick={() => { setActiveTab(camp.id); setExpandedId(null); setStatusFilter('all'); }}
+            onClick={() => { setActiveTab(camp.id); setExpandedId(null); setStatusFilter('all'); setSearchQuery(''); }}
           >
             {camp.logo && <img src={camp.logo} alt="" style={styles.tabLogo} />}
             {camp.brand || camp.name}
@@ -83,36 +97,37 @@ export default function Campaigns() {
         ))}
       </div>
 
-      {/* Status filter pills */}
-      <div style={styles.filterRow}>
-        <button
-          style={{ ...styles.filterPill, ...(statusFilter === 'all' ? styles.filterPillActive : {}) }}
-          onClick={() => setStatusFilter('all')}
-        >
-          All {statusCounts.all || 0}
-        </button>
-        {CAMPAIGN_STAGES.map(s => {
-          const count = statusCounts[s.key] || 0;
-          if (count === 0) return null;
-          return (
-            <button
-              key={s.key}
-              style={{ ...styles.filterPill, ...(statusFilter === s.key ? styles.filterPillActive : {}) }}
-              onClick={() => setStatusFilter(s.key)}
-            >
-              {s.label} {count}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Creator table */}
-      {campaignCreators.length === 0 ? (
-        <div style={styles.emptyState}>
-          No creators in this status for {activeCampaign?.brand || activeCampaign?.name}.
+      {/* Combined card: filter bar + table */}
+      <div style={styles.card}>
+        {/* Filter bar */}
+        <div style={styles.filterBar}>
+          <div style={styles.searchWrap}>
+            <Search size={16} color="#9CA3AF" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="text"
+              placeholder="Search by name or handle..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={styles.searchInput}
+            />
+          </div>
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={styles.filterSelect}>
+            <option value="all">All Status ({statusCounts.all || 0})</option>
+            {CAMPAIGN_STAGES.map(s => {
+              const count = statusCounts[s.key] || 0;
+              if (count === 0) return null;
+              return <option key={s.key} value={s.key}>{s.label} ({count})</option>;
+            })}
+          </select>
+          <span style={styles.countBadge}>{campaignCreators.length} creators</span>
         </div>
-      ) : (
-        <div style={styles.card}>
+
+        {/* Table */}
+        {campaignCreators.length === 0 ? (
+          <div style={styles.emptyState}>
+            No creators in this status for {activeCampaign?.brand || activeCampaign?.name}.
+          </div>
+        ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={styles.theadRow}>
@@ -140,12 +155,11 @@ export default function Campaigns() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
                           <Avatar initials={creator.initials} size={34} photo={creator.photo} />
                           <div>
-                            <div style={{ fontWeight: 600, fontSize: 13 }}>{creator.name}</div>
+                            <div style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.3 }}>{creator.name}</div>
                             <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
                               {creator.handle}
                               {creator.city ? ` · ${creator.city}` : ''}
                               {creator.followers ? ` · ${formatFollowers(creator.followers)}` : ''}
-                              {creator.engagement ? ` · ${creator.engagement}% eng` : ''}
                             </div>
                           </div>
                         </div>
@@ -270,8 +284,8 @@ export default function Campaigns() {
               })}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -300,34 +314,52 @@ const styles = {
   tabActive: { color: 'var(--color-accent)', borderBottomColor: 'var(--color-accent)', fontWeight: 600 },
   tabInactive: { color: 'var(--color-text-tertiary)' },
   tabLogo: { width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--color-border)' },
-  filterRow: {
-    display: 'flex',
-    gap: 6,
-    marginBottom: 'var(--space-4)',
-    flexWrap: 'wrap',
-  },
-  filterPill: {
-    padding: '5px 12px',
-    fontSize: 12,
-    fontWeight: 500,
-    fontFamily: 'inherit',
-    border: '1px solid var(--color-border)',
-    borderRadius: 20,
-    background: 'var(--color-bg-card)',
-    cursor: 'pointer',
-    color: 'var(--color-text-secondary)',
-    whiteSpace: 'nowrap',
-  },
-  filterPillActive: {
-    background: 'var(--color-accent)',
-    color: '#fff',
-    borderColor: 'var(--color-accent)',
-  },
   card: {
     background: 'var(--color-bg-card)',
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-lg)',
     overflow: 'hidden',
+  },
+  filterBar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    padding: '16px 20px',
+    borderBottom: '1px solid var(--color-border)',
+  },
+  searchWrap: {
+    position: 'relative',
+    flex: 1,
+  },
+  searchInput: {
+    width: '100%',
+    padding: '8px 12px 8px 36px',
+    fontSize: 13,
+    fontFamily: 'inherit',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-md)',
+    outline: 'none',
+    background: 'var(--color-bg-page)',
+  },
+  filterSelect: {
+    height: 36,
+    fontSize: 13,
+    padding: '4px 8px',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--color-border)',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    background: 'var(--color-bg-card)',
+  },
+  countBadge: {
+    fontSize: 13,
+    fontWeight: 500,
+    padding: '6px 14px',
+    borderRadius: 'var(--radius-md)',
+    background: 'var(--color-bg-hover)',
+    color: 'var(--color-text-secondary)',
+    whiteSpace: 'nowrap',
+    border: '1px solid var(--color-border)',
   },
   theadRow: {
     borderBottom: '1px solid var(--color-border)',
@@ -339,6 +371,7 @@ const styles = {
     color: 'var(--color-text-tertiary)',
     textAlign: 'left',
     letterSpacing: '0.5px',
+    whiteSpace: 'nowrap',
   },
   tbodyRow: {
     borderBottom: '1px solid var(--color-border)',
@@ -357,14 +390,13 @@ const styles = {
     padding: 'var(--space-10)',
     color: 'var(--color-text-secondary)',
     fontSize: 14,
-    background: 'var(--color-bg-card)',
-    borderRadius: 'var(--radius-lg)',
-    border: '1px solid var(--color-border)',
   },
   expandedPanel: {
     padding: '0 24px 24px',
     background: '#FAFAFA',
     borderTop: '1px solid var(--color-border)',
+    borderLeft: '3px solid #7C3AED',
+    marginLeft: 12,
   },
   reviewHeader: {
     display: 'flex',
