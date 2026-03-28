@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
-import { ChevronUp, ChevronDown, Check, ChevronRight, Plus, X, Sparkles, Heart, MessageCircle, Share2, Bookmark, Eye as EyeIcon } from 'lucide-react';
+import { Check, ChevronRight, Plus, X, Sparkles, Heart, MessageCircle, Share2, Search, Eye as EyeIcon } from 'lucide-react';
 import { useAppState } from '../hooks/useAppState';
 import Avatar from '../components/Avatar';
 import { formatFollowers } from '../utils/formatters';
@@ -39,9 +39,11 @@ export default function DraftPortal() {
   const [visibility, setVisibility] = useState({}); // default = invisible (must opt-in)
   const [checkedIds, setCheckedIds] = useState(new Set());
   const [customReasons, setCustomReasons] = useState({});
-  const [editingReasonIdx, setEditingReasonIdx] = useState(null); // { creatorId, index }
+  const [editingReasonIdx, setEditingReasonIdx] = useState(null);
   const [editingReasonText, setEditingReasonText] = useState('');
   const [newReason, setNewReason] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [visFilter, setVisFilter] = useState('all'); // 'all' | 'visible' | 'hidden'
 
   // Order management
   const getOrder = useCallback(() => {
@@ -91,14 +93,14 @@ export default function DraftPortal() {
     });
   }, []);
 
-  const toggleAllChecked = useCallback(() => {
-    const allIds = eligibleCreators.map(c => c.id);
-    if (checkedIds.size === allIds.length) {
+  // toggleAllChecked will be defined after orderedCreators, use a ref pattern
+  const toggleAllCheckedFn = useCallback((filteredIds) => {
+    if (checkedIds.size > 0 && [...checkedIds].every(id => filteredIds.includes(id)) && checkedIds.size === filteredIds.length) {
       setCheckedIds(new Set());
     } else {
-      setCheckedIds(new Set(allIds));
+      setCheckedIds(new Set(filteredIds));
     }
-  }, [checkedIds, eligibleCreators]);
+  }, [checkedIds]);
 
   const bulkSetVisibility = useCallback((makeVisible) => {
     setVisibility(prev => {
@@ -110,15 +112,6 @@ export default function DraftPortal() {
     });
     setCheckedIds(new Set());
   }, [checkedIds, activeTab]);
-
-  // Reorder
-  const moveCreator = useCallback((index, direction) => {
-    const order = [...getOrder()];
-    const newIndex = index + direction;
-    if (newIndex < 0 || newIndex >= order.length) return;
-    [order[index], order[newIndex]] = [order[newIndex], order[index]];
-    setOrder(order);
-  }, [getOrder, setOrder]);
 
   const [editingOrderIdx, setEditingOrderIdx] = useState(null);
   const [editingOrderValue, setEditingOrderValue] = useState('');
@@ -178,7 +171,22 @@ export default function DraftPortal() {
     setEditingReasonText('');
   };
 
-  const orderedCreators = getOrder().map(id => eligibleCreators.find(c => c.id === id)).filter(Boolean);
+  const allOrderedCreators = getOrder().map(id => eligibleCreators.find(c => c.id === id)).filter(Boolean);
+
+  // Apply search and visibility filter
+  const orderedCreators = useMemo(() => {
+    let list = allOrderedCreators;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(c => c.name.toLowerCase().includes(q) || c.handle.toLowerCase().includes(q));
+    }
+    if (visFilter === 'visible') {
+      list = list.filter(c => isVisible(c.id));
+    } else if (visFilter === 'hidden') {
+      list = list.filter(c => !isVisible(c.id));
+    }
+    return list;
+  }, [allOrderedCreators, searchQuery, visFilter, isVisible]);
 
   const handleSave = () => {
     addToast(`Portal draft saved for ${activeCampaign?.brand || activeCampaign?.name}. ${orderedCreators.length} creators.`);
@@ -209,20 +217,37 @@ export default function DraftPortal() {
         ))}
       </div>
 
-      {/* Info bar */}
-      {activeCampaign && (
-        <div style={styles.infoBar}>
-          <span>{activeCampaign.name}</span>
-          <span style={styles.dot}>·</span>
-          <span>{orderedCreators.length} creators</span>
-          <span style={styles.dot}>·</span>
-          <span>{orderedCreators.filter(c => getPhotos(c.id).length > 0).length} with photos selected</span>
+      {/* Search / filter / select-all header */}
+      <div style={styles.headerBar}>
+        <input
+          type="checkbox"
+          checked={orderedCreators.length > 0 && checkedIds.size === orderedCreators.length}
+          onChange={() => toggleAllCheckedFn(orderedCreators.map(c => c.id))}
+          style={{ ...styles.checkbox, marginRight: 4 }}
+        />
+        <div style={styles.searchWrap}>
+          <Search size={14} color="#9CA3AF" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+          <input
+            type="text"
+            placeholder="Search creators..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={styles.searchInput}
+          />
         </div>
-      )}
+        <select value={visFilter} onChange={e => setVisFilter(e.target.value)} style={styles.visFilterSelect}>
+          <option value="all">All</option>
+          <option value="visible">Visible to brand</option>
+          <option value="hidden">Hidden from brand</option>
+        </select>
+        <span style={styles.countLabel}>{orderedCreators.length} creators</span>
+      </div>
 
       {orderedCreators.length === 0 ? (
         <div style={styles.emptyState}>
-          No creators assigned to this campaign yet. Go to Creator Program → select creators → assign to campaign.
+          {eligibleCreators.length === 0
+            ? 'No creators assigned to this campaign yet. Go to Creator Program → select creators → assign to campaign.'
+            : 'No creators match your search or filter.'}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -290,10 +315,8 @@ export default function DraftPortal() {
                     <div style={{ ...styles.toggleThumb, transform: visible ? 'translateX(16px)' : 'translateX(0)' }} />
                   </div>
 
-                  {/* Move buttons + order input */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-                    <button style={styles.moveBtn} onClick={() => moveCreator(index, -1)} disabled={index === 0}><ChevronUp size={14} /></button>
-                    <button style={styles.moveBtn} onClick={() => moveCreator(index, 1)} disabled={index === orderedCreators.length - 1}><ChevronDown size={14} /></button>
+                  {/* Order input */}
+                  <div style={{ flexShrink: 0 }} onClick={e => e.stopPropagation()}>
                     <input
                       type="text"
                       value={editingOrderIdx === index ? editingOrderValue : index + 1}
@@ -507,12 +530,45 @@ const styles = {
   tabActive: { color: 'var(--color-accent)', borderBottomColor: 'var(--color-accent)', fontWeight: 600 },
   tabInactive: { color: 'var(--color-text-tertiary)' },
   tabLogo: { width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--color-border)' },
-  infoBar: {
-    display: 'flex', alignItems: 'center', gap: 8,
-    padding: '8px 16px', background: 'var(--color-bg-sidebar)', borderRadius: 'var(--radius-md)',
-    marginBottom: 'var(--space-4)', fontSize: 13, color: 'var(--color-text-secondary)',
+  headerBar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '10px 12px',
+    background: 'var(--color-bg-card)',
+    borderBottom: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-md) var(--radius-md) 0 0',
   },
-  dot: { color: 'var(--color-text-tertiary)' },
+  searchWrap: {
+    position: 'relative',
+    flex: 1,
+  },
+  searchInput: {
+    width: '100%',
+    padding: '6px 10px 6px 30px',
+    fontSize: 13,
+    fontFamily: 'inherit',
+    border: '1px solid var(--color-border)',
+    borderRadius: 6,
+    outline: 'none',
+    background: 'var(--color-bg-page)',
+  },
+  visFilterSelect: {
+    height: 32,
+    fontSize: 12,
+    padding: '2px 6px',
+    borderRadius: 6,
+    border: '1px solid var(--color-border)',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    background: 'var(--color-bg-card)',
+  },
+  countLabel: {
+    fontSize: 12,
+    color: 'var(--color-text-tertiary)',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
+  },
   emptyState: {
     textAlign: 'center', padding: 'var(--space-10)', color: 'var(--color-text-secondary)',
     fontSize: 14, background: 'var(--color-bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)',
@@ -588,16 +644,6 @@ const styles = {
     left: 2,
     transition: 'transform 150ms',
     boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
-  },
-  moveBtn: {
-    background: 'none',
-    border: '1px solid var(--color-border)',
-    borderRadius: 3,
-    cursor: 'pointer',
-    padding: 2,
-    color: 'var(--color-text-secondary)',
-    display: 'flex',
-    alignItems: 'center',
   },
   expandedPanel: {
     borderLeft: '3px solid #7C3AED',
