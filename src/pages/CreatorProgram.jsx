@@ -263,37 +263,6 @@ export default function CreatorProgram() {
         <span style={styles.countBadge}>All Creators {totalCount}</span>
       </div>
 
-      {/* Bulk actions bar */}
-      <div style={styles.bulkBar}>
-        <span>Selected rows: {selected.size}</span>
-        <div style={styles.bulkDivider} />
-        <button className="btn btn-primary btn-sm" onClick={() => bulkChangeStatus('invited_to_program')} disabled={selected.size === 0}>
-          <Check size={14} /> Invite to Program
-        </button>
-        <button className="btn btn-sm" style={{ background: selected.size > 0 ? '#3D8B5E' : '#9CA3AF', color: '#fff', border: 'none' }} onClick={() => bulkChangeStatus('in_program')} disabled={selected.size === 0}>
-          <Check size={14} /> Mark In Program
-        </button>
-        <div style={styles.bulkDivider} />
-        <select
-          value={assignCampaign}
-          onChange={e => setAssignCampaign(e.target.value)}
-          style={styles.filterSelect}
-        >
-          <option value="">Select campaign...</option>
-          {liveCampaigns.map(c => (
-            <option key={c.id} value={c.id}>{c.brand || c.name}</option>
-          ))}
-        </select>
-        <button
-          className="btn btn-sm"
-          style={{ background: (selected.size > 0 && assignCampaign) ? '#7C3AED' : '#9CA3AF', color: '#fff', border: 'none' }}
-          onClick={bulkAssignCampaign}
-          disabled={!assignCampaign || selected.size === 0}
-        >
-          <Send size={14} /> Assign to Campaign
-        </button>
-      </div>
-
       {programCreators.length === 0 ? (
         <div style={styles.emptyState}>
           <p>No creators match your filters.</p>
@@ -420,6 +389,49 @@ export default function CreatorProgram() {
           </div>
         </div>
       )}
+
+      {/* Fixed bottom action bar — only when selected */}
+      {selected.size > 0 && (
+        <div style={styles.bottomBar}>
+          <span style={{ fontWeight: 600 }}>{selected.size} selected</span>
+          <button
+            style={styles.bottomBtn}
+            onClick={() => setSelected(new Set())}
+          >
+            Deselect All
+          </button>
+          <button
+            style={{ ...styles.bottomBtn, background: '#F59E0B', color: '#fff' }}
+            onClick={() => bulkChangeStatus('invited_to_program')}
+          >
+            Mark as Invited
+          </button>
+          <button
+            style={{ ...styles.bottomBtn, background: '#22C55E', color: '#fff' }}
+            onClick={() => bulkChangeStatus('in_program')}
+          >
+            Mark as In Program
+          </button>
+          <div style={styles.bottomDivider} />
+          <select
+            value={assignCampaign}
+            onChange={e => setAssignCampaign(e.target.value)}
+            style={{ ...styles.filterSelect, background: '#fff' }}
+          >
+            <option value="">Select campaign...</option>
+            {liveCampaigns.map(c => (
+              <option key={c.id} value={c.id}>{c.brand || c.name}</option>
+            ))}
+          </select>
+          <button
+            style={{ ...styles.bottomBtn, background: assignCampaign ? '#7C3AED' : '#9CA3AF', color: '#fff' }}
+            onClick={bulkAssignCampaign}
+            disabled={!assignCampaign}
+          >
+            <Send size={14} /> Assign to Campaign
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -497,21 +509,39 @@ const styles = {
     whiteSpace: 'nowrap',
     border: '1px solid var(--color-border)',
   },
-  bulkBar: {
+  bottomBar: {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
     display: 'flex',
     alignItems: 'center',
     gap: 12,
-    padding: '10px 16px',
-    background: 'var(--color-accent-light)',
-    borderRadius: 'var(--radius-md)',
-    marginBottom: 'var(--space-4)',
+    padding: '14px 24px',
+    background: '#1F2937',
+    color: '#fff',
     fontSize: 14,
-    fontWeight: 500,
+    zIndex: 900,
+    boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
   },
-  bulkDivider: {
+  bottomBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '7px 16px',
+    fontSize: 13,
+    fontWeight: 600,
+    fontFamily: 'inherit',
+    background: '#374151',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 4,
+    cursor: 'pointer',
+  },
+  bottomDivider: {
     width: 1,
     height: 24,
-    background: 'var(--color-border)',
+    background: '#4B5563',
     flexShrink: 0,
   },
   emptyState: {
