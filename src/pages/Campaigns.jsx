@@ -169,7 +169,7 @@ export default function Campaigns() {
                         padding: '3px 6px',
                         borderRadius: 4,
                         color: stageInfo.color,
-                        background: stageInfo.bg,
+                        backgroundColor: stageInfo.bg,
                         border: `1px solid ${stageInfo.bg}`,
                         cursor: 'pointer',
                         fontFamily: 'inherit',
