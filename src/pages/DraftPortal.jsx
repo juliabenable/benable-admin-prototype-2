@@ -120,11 +120,15 @@ export default function DraftPortal() {
     setOrder(order);
   }, [getOrder, setOrder]);
 
-  const handleOrderInput = useCallback((index, newPos) => {
+  const [editingOrderIdx, setEditingOrderIdx] = useState(null);
+  const [editingOrderValue, setEditingOrderValue] = useState('');
+
+  const commitOrder = useCallback((index, newPos) => {
     const num = parseInt(newPos, 10);
     if (isNaN(num) || num < 1) return;
     const order = [...getOrder()];
     const target = Math.min(num, order.length) - 1;
+    if (target === index) return;
     const [item] = order.splice(index, 1);
     order.splice(target, 0, item);
     setOrder(order);
@@ -292,8 +296,11 @@ export default function DraftPortal() {
                     <button style={styles.moveBtn} onClick={() => moveCreator(index, 1)} disabled={index === orderedCreators.length - 1}><ChevronDown size={14} /></button>
                     <input
                       type="text"
-                      value={index + 1}
-                      onChange={e => handleOrderInput(index, e.target.value)}
+                      value={editingOrderIdx === index ? editingOrderValue : index + 1}
+                      onFocus={() => { setEditingOrderIdx(index); setEditingOrderValue(String(index + 1)); }}
+                      onChange={e => setEditingOrderValue(e.target.value.replace(/[^0-9]/g, ''))}
+                      onBlur={() => { commitOrder(index, editingOrderValue); setEditingOrderIdx(null); }}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.target.blur(); } }}
                       style={styles.orderInput}
                     />
                   </div>
