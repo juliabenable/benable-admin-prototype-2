@@ -193,11 +193,10 @@ export default function DraftPortal() {
     return list;
   }, [allOrderedCreators, searchQuery, visFilter, isVisible]);
 
-  const removeFromCampaign = useCallback((creatorId) => {
-    const creator = creators.find(c => c.id === creatorId);
+  const bulkRemoveFromCampaign = useCallback(() => {
+    const count = checkedIds.size;
     setCreators(prev => prev.map(c => {
-      if (c.id !== creatorId) return c;
-      // Remove this campaign from campaignIds, reset stage back to program stage
+      if (!checkedIds.has(c.id)) return c;
       const campaignIds = (c.campaignIds || []).filter(id => id !== activeTab);
       return {
         ...c,
@@ -207,8 +206,9 @@ export default function DraftPortal() {
       };
     }));
     setExpandedId(null);
-    addToast(`${creator?.name} removed from ${activeCampaign?.brand || activeCampaign?.name}`);
-  }, [creators, setCreators, activeTab, activeCampaign, addToast]);
+    setCheckedIds(new Set());
+    addToast(`${count} creator${count > 1 ? 's' : ''} removed from ${activeCampaign?.brand || activeCampaign?.name}`);
+  }, [checkedIds, setCreators, activeTab, activeCampaign, addToast]);
 
   const handleSave = () => {
     addToast(`Portal draft saved for ${activeCampaign?.brand || activeCampaign?.name}. ${orderedCreators.length} creators.`);
@@ -335,15 +335,6 @@ export default function DraftPortal() {
                   {creator.stage === 'invited_to_campaign' && (
                     <span style={styles.invitedBadge}>Invited</span>
                   )}
-
-                  {/* Remove from campaign */}
-                  <button
-                    style={styles.removeBtn}
-                    title="Remove from campaign"
-                    onClick={e => { e.stopPropagation(); removeFromCampaign(creator.id); }}
-                  >
-                    <X size={14} />
-                  </button>
 
                   {/* Photo check indicator */}
                   {hasPhotos && (
@@ -546,6 +537,9 @@ export default function DraftPortal() {
           </button>
           <button style={styles.bulkBtnMuted} onClick={() => bulkSetVisibility(false)}>
             Hide from Brand
+          </button>
+          <button style={styles.bulkBtnDanger} onClick={bulkRemoveFromCampaign}>
+            <X size={14} /> Remove from Campaign
           </button>
         </div>
       )}
@@ -951,6 +945,20 @@ const styles = {
   },
   bulkBtnMuted: {
     background: 'rgba(255,255,255,0.15)',
+    border: 'none',
+    color: '#fff',
+    padding: '6px 14px',
+    borderRadius: 6,
+    fontSize: 13,
+    fontWeight: 500,
+    fontFamily: 'inherit',
+    cursor: 'pointer',
+  },
+  bulkBtnDanger: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    background: '#DC2626',
     border: 'none',
     color: '#fff',
     padding: '6px 14px',
