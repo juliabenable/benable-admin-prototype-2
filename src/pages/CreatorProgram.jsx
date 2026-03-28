@@ -295,11 +295,10 @@ export default function CreatorProgram() {
                   />
                 </th>
                 <th style={styles.th}>CREATOR</th>
-                <th style={{ ...styles.th, width: 36, padding: '10px 2px' }}></th>
                 <th style={styles.th}>STATUS</th>
                 <th style={styles.th}>CAMPAIGN</th>
-                <th style={{ ...styles.th, textAlign: 'right', paddingRight: 4 }}>DAYS</th>
-                <th style={{ ...styles.th, textAlign: 'right' }}>DATE ADDED</th>
+                <th style={{ ...styles.th, textAlign: 'right', paddingRight: 6 }}>DAYS</th>
+                <th style={{ ...styles.th, textAlign: 'right', paddingLeft: 6 }}>DATE ADDED</th>
               </tr>
             </thead>
             <tbody>
@@ -318,32 +317,28 @@ export default function CreatorProgram() {
                       />
                     </td>
                     <td style={styles.td}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Avatar initials={creator.initials} size={34} photo={creator.photo} />
-                        <div>
+                        <div style={{ minWidth: 0 }}>
                           <div style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.3 }}>{creator.name}</div>
-                          <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
+                          <div style={{ fontSize: 12, color: '#94A3B8' }}>
                             {creator.handle}
                             {creator.followers ? ` · ${formatFollowers(creator.followers)}` : ''}
                           </div>
                         </div>
+                        {creator.email && (
+                          <button
+                            style={styles.emailBtn}
+                            title={creator.email}
+                            onClick={() => {
+                              navigator.clipboard.writeText(creator.email);
+                              addToast(`Copied ${creator.email}`);
+                            }}
+                          >
+                            <Mail size={14} />
+                          </button>
+                        )}
                       </div>
-                    </td>
-                    <td style={{ ...styles.td, width: 36, padding: '12px 2px' }}>
-                      {creator.email ? (
-                        <button
-                          style={styles.emailBtn}
-                          title={creator.email}
-                          onClick={() => {
-                            navigator.clipboard.writeText(creator.email);
-                            addToast(`Copied ${creator.email}`);
-                          }}
-                        >
-                          <Mail size={14} />
-                        </button>
-                      ) : (
-                        <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>—</span>
-                      )}
                     </td>
                     <td style={styles.td}>
                       <select
@@ -395,10 +390,10 @@ export default function CreatorProgram() {
                         </div>
                       )}
                     </td>
-                    <td style={{ ...styles.td, fontSize: 12, textAlign: 'right', paddingRight: 4, color: creator.daysInStage > 2 ? '#DC2626' : '#94A3B8', fontWeight: creator.daysInStage > 2 ? 600 : 400, whiteSpace: 'nowrap' }}>
+                    <td style={{ ...styles.td, fontSize: 12, textAlign: 'right', paddingRight: 6, color: creator.daysInStage > 2 ? '#DC2626' : '#94A3B8', fontWeight: creator.daysInStage > 2 ? 600 : 400, whiteSpace: 'nowrap' }}>
                       {creator.daysInStage != null ? `${creator.daysInStage}d` : '—'}
                     </td>
-                    <td style={{ ...styles.td, textAlign: 'right', fontSize: 12, color: '#94A3B8', whiteSpace: 'nowrap' }}>
+                    <td style={{ ...styles.td, textAlign: 'right', paddingLeft: 6, fontSize: 12, color: '#94A3B8', whiteSpace: 'nowrap' }}>
                       {creator.dateAdded || '—'}
                     </td>
                   </tr>
